@@ -1,0 +1,320 @@
+# question[|paraphrase|...]<TAB>answer
+# Answers must be direct: the answer only, no preamble, no restating the question.
+# Animals
+how much does a hummingbird weigh|what is the weight of a hummingbird|how heavy is a hummingbird	Between 2 and 20 grams.
+how fast can a cheetah run|what is the top speed of a cheetah|how fast is a cheetah	About 110 km/h.
+how long do cats live|what is the lifespan of a cat|how many years does a cat live	12 to 18 years.
+how long do dogs live|what is the lifespan of a dog|how many years does a dog live	10 to 13 years.
+how many legs does a spider have|how many legs do spiders have	8.
+how many legs does an insect have|how many legs do insects have	6.
+how many hearts does an octopus have|how many hearts do octopuses have	3.
+how many arms does an octopus have|how many arms do octopuses have	8.
+what is the largest animal|what is the biggest animal on earth|what is the largest animal ever	The blue whale.
+what is the tallest animal|what is the tallest animal on earth	The giraffe.
+what is the fastest bird|which bird is the fastest	The peregrine falcon.
+what is the fastest land animal|which land animal is fastest	The cheetah.
+what is the largest bird|what is the biggest bird	The ostrich.
+what is the smallest bird|what is the tiniest bird	The bee hummingbird.
+how much does a blue whale weigh|what is the weight of a blue whale|how heavy is a blue whale	Up to about 190 tonnes.
+how much does an elephant weigh|what is the weight of an elephant|how heavy is an elephant	2.5 to 7 tonnes.
+how long is a giraffe's neck|how long is a giraffe neck	About 2 meters.
+what do pandas eat|what does a panda eat	Bamboo.
+what do koalas eat|what does a koala eat	Eucalyptus leaves.
+what is a baby kangaroo called|what do you call a baby kangaroo	A joey.
+what is a baby cat called|what do you call a baby cat	A kitten.
+what is a baby dog called|what do you call a baby dog	A puppy.
+what is a group of lions called|what do you call a group of lions	A pride.
+what is a group of wolves called|what do you call a group of wolves	A pack.
+what is a group of crows called|what do you call a group of crows	A murder.
+are whales mammals|is a whale a mammal	Yes.
+are bats mammals|is a bat a mammal	Yes.
+is a spider an insect|are spiders insects	No, it is an arachnid.
+is a tomato a fruit|are tomatoes fruit	Yes.
+how many teeth does an adult human have|how many teeth do adults have	32.
+how many bones are in the human body|how many bones does an adult have	206.
+how many chambers does the human heart have|how many chambers are in the heart	4.
+what is the largest organ of the human body|what is the biggest organ in the body	The skin.
+what is the smallest bone in the human body|what is the smallest bone in the body	The stapes, in the ear.
+what is the largest bone in the human body|what is the longest bone in the body	The femur.
+how many chromosomes do humans have|how many chromosomes does a human have	46.
+what is the normal human body temperature|what is normal body temperature	About 37 C.
+how much blood is in the human body|how many liters of blood does a person have	About 5 liters.
+what is the normal resting heart rate|what is a normal heart rate	60 to 100 beats per minute.
+how much water should i drink a day|how much water should a person drink daily	About 2 to 3 liters.
+how many hours should an adult sleep|how much sleep does an adult need	7 to 9 hours.
+how long can a human live without water|how long can you survive without water	About 3 days.
+how long is a human pregnancy|how long does pregnancy last	About 40 weeks.
+what percent of the human body is water|how much of the body is water	About 60 percent.
+# Space
+how far is the moon|what is the distance to the moon|how far away is the moon	About 384,400 km.
+how far is the sun|what is the distance to the sun|how far away is the sun	About 150 million km.
+how long does light from the sun take to reach earth|how long does sunlight take to reach earth	About 8 minutes 20 seconds.
+how many planets are in the solar system|how many planets are there	8.
+what is the largest planet|what is the biggest planet	Jupiter.
+what is the smallest planet|what is the tiniest planet	Mercury.
+what is the hottest planet|which planet is hottest	Venus.
+what is the closest planet to the sun|which planet is nearest the sun	Mercury.
+what is the farthest planet from the sun|which planet is farthest from the sun	Neptune.
+which planet is called the red planet|what is the red planet	Mars.
+which planet has the most moons|what planet has the most moons	Saturn.
+how many moons does mars have|how many moons orbit mars	2.
+how many moons does earth have|how many moons do we have	1.
+how old is the earth|what is the age of the earth	About 4.54 billion years.
+how old is the universe|what is the age of the universe	About 13.8 billion years.
+how old is the sun|what is the age of the sun	About 4.6 billion years.
+what is the closest star to earth|what is the nearest star	The Sun.
+what is the closest star to the sun|what is the nearest star after the sun	Proxima Centauri.
+what galaxy do we live in|what is our galaxy called	The Milky Way.
+how long is a day on mars|how long is a mars day	24 hours 37 minutes.
+how long is a year on mars|how long is a mars year	687 Earth days.
+how long does earth take to orbit the sun|how long is a year	365.25 days.
+how long does the earth take to rotate|how long is a day	About 24 hours.
+what is the diameter of the earth|how wide is the earth	About 12,742 km.
+what is the circumference of the earth|how big around is the earth	About 40,075 km.
+what is the diameter of the moon|how wide is the moon	About 3,474 km.
+who was the first person on the moon|who first walked on the moon	Neil Armstrong.
+when did humans land on the moon|what year did we land on the moon	1969.
+who was the first person in space|who first went to space	Yuri Gagarin.
+when was the first person in space|what year did humans first go to space	1961.
+what is the gravity on earth|what is the acceleration of gravity	9.81 m/s2.
+what is the gravity on the moon|how strong is gravity on the moon	1.62 m/s2.
+what is a light year|what does light year mean	The distance light travels in a year.
+how far is a light year|how long is a light year	About 9.46 trillion km.
+what is the sun made of|what is the sun mostly made of	Hydrogen and helium.
+what is the temperature of the sun's surface|how hot is the surface of the sun|how hot is the sun	About 5,500 C.
+# Physics and chemistry
+what is the speed of light|how fast is light|how fast does light travel	299,792 km/s.
+what is the speed of sound|how fast is sound|how fast does sound travel	About 343 m/s.
+at what temperature does water boil|what is the boiling point of water|when does water boil	100 C at sea level.
+at what temperature does water freeze|what is the freezing point of water|when does water freeze	0 C.
+what is absolute zero|how cold is absolute zero	-273.15 C.
+what is the chemical formula for water|what is water made of	H2O.
+what is the chemical symbol for gold|what is the symbol for gold	Au.
+what is the chemical symbol for silver|what is the symbol for silver	Ag.
+what is the chemical symbol for iron|what is the symbol for iron	Fe.
+what is the chemical symbol for sodium|what is the symbol for sodium	Na.
+what is the chemical symbol for potassium|what is the symbol for potassium	K.
+what is the chemical symbol for oxygen|what is the symbol for oxygen	O.
+what is the chemical symbol for carbon|what is the symbol for carbon	C.
+what is the chemical formula for table salt|what is salt made of	NaCl.
+what is the chemical formula for carbon dioxide|what is co2	CO2, carbon dioxide.
+what is the most abundant gas in the air|what is air mostly made of	Nitrogen, about 78 percent.
+how much oxygen is in the air|what percent of air is oxygen	About 21 percent.
+what is the lightest element|what is the first element	Hydrogen.
+what is the heaviest natural element|what is the heaviest naturally occurring element	Uranium.
+how many elements are in the periodic table|how many elements are there	118.
+what is the hardest natural material|what is the hardest substance	Diamond.
+what is the atomic number of carbon|what number is carbon on the periodic table	6.
+what is the atomic number of oxygen|what number is oxygen on the periodic table	8.
+what is the atomic number of hydrogen|what number is hydrogen on the periodic table	1.
+what is the ph of water|what is the ph of pure water	7.
+what is the unit of electrical resistance|what is resistance measured in	The ohm.
+what is the unit of electric current|what is current measured in	The ampere.
+what is the unit of force|what is force measured in	The newton.
+what is the unit of energy|what is energy measured in	The joule.
+what is the unit of power|what is power measured in	The watt.
+what is the unit of frequency|what is frequency measured in	The hertz.
+what is ohm's law|what is ohms law	V = I x R.
+what is newton's second law|what is newtons second law	F = m x a.
+what is e=mc2|what does e=mc2 mean	Energy equals mass times the speed of light squared.
+who discovered gravity|who came up with gravity	Isaac Newton.
+who developed the theory of relativity|who invented relativity	Albert Einstein.
+who discovered penicillin|who found penicillin	Alexander Fleming.
+who invented the light bulb|who made the first light bulb	Thomas Edison, commercially.
+who invented the telephone|who made the first telephone	Alexander Graham Bell.
+who invented the airplane|who made the first airplane	The Wright brothers.
+who invented the world wide web|who invented the web	Tim Berners-Lee.
+who proposed evolution by natural selection|who came up with evolution	Charles Darwin.
+who discovered radioactivity|who found radioactivity	Henri Becquerel.
+what color is the sky|why is the sky blue	Blue, from Rayleigh scattering.
+how many colors are in a rainbow|how many colors does a rainbow have	7.
+what are the primary colors of light|what are the primary colors of light	Red, green and blue.
+# Geography
+what is the capital of france|capital of france	Paris.
+what is the capital of germany|capital of germany	Berlin.
+what is the capital of italy|capital of italy	Rome.
+what is the capital of spain|capital of spain	Madrid.
+what is the capital of portugal|capital of portugal	Lisbon.
+what is the capital of the united kingdom|what is the capital of england|capital of the uk	London.
+what is the capital of ireland|capital of ireland	Dublin.
+what is the capital of the netherlands|capital of the netherlands	Amsterdam.
+what is the capital of belgium|capital of belgium	Brussels.
+what is the capital of switzerland|capital of switzerland	Bern.
+what is the capital of austria|capital of austria	Vienna.
+what is the capital of poland|capital of poland	Warsaw.
+what is the capital of sweden|capital of sweden	Stockholm.
+what is the capital of norway|capital of norway	Oslo.
+what is the capital of denmark|capital of denmark	Copenhagen.
+what is the capital of finland|capital of finland	Helsinki.
+what is the capital of greece|capital of greece	Athens.
+what is the capital of turkey|capital of turkey	Ankara.
+what is the capital of russia|capital of russia	Moscow.
+what is the capital of ukraine|capital of ukraine	Kyiv.
+what is the capital of egypt|capital of egypt	Cairo.
+what is the capital of nigeria|capital of nigeria	Abuja.
+what is the capital of kenya|capital of kenya	Nairobi.
+what is the capital of south africa|capital of south africa	Pretoria, Cape Town and Bloemfontein.
+what is the capital of morocco|capital of morocco	Rabat.
+what is the capital of china|capital of china	Beijing.
+what is the capital of japan|capital of japan	Tokyo.
+what is the capital of south korea|capital of south korea	Seoul.
+what is the capital of india|capital of india	New Delhi.
+what is the capital of pakistan|capital of pakistan	Islamabad.
+what is the capital of indonesia|capital of indonesia	Jakarta.
+what is the capital of thailand|capital of thailand	Bangkok.
+what is the capital of vietnam|capital of vietnam	Hanoi.
+what is the capital of the philippines|capital of the philippines	Manila.
+what is the capital of saudi arabia|capital of saudi arabia	Riyadh.
+what is the capital of iran|capital of iran	Tehran.
+what is the capital of israel|capital of israel	Jerusalem, though disputed.
+what is the capital of australia|capital of australia	Canberra.
+what is the capital of new zealand|capital of new zealand	Wellington.
+what is the capital of the united states|what is the capital of the usa|capital of america	Washington, D.C.
+what is the capital of canada|capital of canada	Ottawa.
+what is the capital of mexico|capital of mexico	Mexico City.
+what is the capital of brazil|capital of brazil	Brasilia.
+what is the capital of argentina|capital of argentina	Buenos Aires.
+what is the capital of chile|capital of chile	Santiago.
+what is the capital of peru|capital of peru	Lima.
+what is the capital of colombia|capital of colombia	Bogota.
+what is the largest country|what is the biggest country in the world	Russia.
+what is the smallest country|what is the smallest country in the world	Vatican City.
+what is the most populated country|which country has the most people	India.
+what is the largest continent|what is the biggest continent	Asia.
+what is the smallest continent|what is the tiniest continent	Australia.
+how many continents are there|how many continents are on earth	7.
+how many countries are in the world|how many countries are there	195.
+what is the largest ocean|what is the biggest ocean	The Pacific.
+how many oceans are there|how many oceans are on earth	5.
+what is the longest river|what is the longest river in the world	The Nile.
+what is the largest desert|what is the biggest desert	Antarctica. The Sahara is the largest hot desert.
+what is the tallest mountain|what is the highest mountain in the world	Mount Everest.
+how tall is mount everest|how high is mount everest|what is the height of mount everest	8,849 meters.
+what is the deepest point in the ocean|what is the deepest part of the ocean	The Challenger Deep, about 10,935 m.
+what is the largest lake|what is the biggest lake	The Caspian Sea.
+what is the largest island|what is the biggest island	Greenland.
+what is the population of the world|how many people are on earth|how many people live on earth	About 8.2 billion.
+what language is spoken in brazil|what language do brazilians speak	Portuguese.
+what language is spoken in mexico|what language do mexicans speak	Spanish.
+what is the currency of japan|what money does japan use	The yen.
+what is the currency of the uk|what money does the uk use	The pound sterling.
+what is the currency of the united states|what money does the us use	The US dollar.
+what is the currency of europe|what money does europe use	The euro.
+where is the eiffel tower|what city is the eiffel tower in	Paris.
+where is the great wall|what country is the great wall in	China.
+where are the pyramids of giza|what country are the pyramids in	Egypt.
+where is the statue of liberty|what city is the statue of liberty in	New York City.
+# History
+when did world war 2 end|what year did ww2 end|when did the second world war end	1945.
+when did world war 2 start|what year did ww2 start|when did the second world war start	1939.
+when did world war 1 start|what year did ww1 start	1914.
+when did world war 1 end|what year did ww1 end	1918.
+who was the first president of the united states|who was the first us president	George Washington.
+when did the titanic sink|what year did the titanic sink	1912.
+when did the berlin wall fall|what year did the berlin wall fall	1989.
+when was the declaration of independence signed|what year was the declaration of independence	1776.
+when did columbus reach america|what year did columbus sail	1492.
+who painted the mona lisa|who made the mona lisa	Leonardo da Vinci.
+who painted the starry night|who made the starry night	Vincent van Gogh.
+who wrote romeo and juliet|who is the author of romeo and juliet	William Shakespeare.
+who wrote hamlet|who is the author of hamlet	William Shakespeare.
+who wrote 1984|who is the author of 1984	George Orwell.
+who wrote the odyssey|who is the author of the odyssey	Homer.
+who wrote pride and prejudice|who is the author of pride and prejudice	Jane Austen.
+who composed the four seasons|who wrote the four seasons	Antonio Vivaldi.
+who was the first emperor of rome|who was the first roman emperor	Augustus.
+when was the first iphone released|what year did the iphone come out	2007.
+when did the internet start|when was the internet invented	1983, when ARPANET adopted TCP/IP.
+# Units and numbers
+how many meters are in a kilometer|how many meters in a km	1,000.
+how many centimeters are in a meter|how many cm in a meter	100.
+how many centimeters are in an inch|how many cm in an inch	2.54.
+how many inches are in a foot|how many inches in a foot	12.
+how many feet are in a mile|how many feet in a mile	5,280.
+how many kilometers are in a mile|how many km in a mile	1.609.
+how many miles are in a kilometer|how many miles in a km	0.621.
+how many grams are in a kilogram|how many grams in a kg	1,000.
+how many pounds are in a kilogram|how many pounds in a kg	2.205.
+how many grams are in a pound|how many grams in a pound	453.6.
+how many ounces are in a pound|how many ounces in a pound	16.
+how many milliliters are in a liter|how many ml in a liter	1,000.
+how many liters are in a gallon|how many liters in a gallon	3.785 for a US gallon.
+how many seconds are in a minute|how many seconds in a minute	60.
+how many seconds are in an hour|how many seconds in an hour	3,600.
+how many seconds are in a day|how many seconds in a day	86,400.
+how many minutes are in a day|how many minutes in a day	1,440.
+how many hours are in a week|how many hours in a week	168.
+how many days are in a year|how many days in a year	365, or 366 in a leap year.
+how many days are in a leap year|how many days in a leap year	366.
+how many weeks are in a year|how many weeks in a year	52.
+how many months are in a year|how many months in a year	12.
+how many days are in february|how many days does february have	28, or 29 in a leap year.
+how many years are in a century|how many years in a century	100.
+how many bits are in a byte|how many bits in a byte	8.
+how many bytes are in a kilobyte|how many bytes in a kb	1,024 (or 1,000 in SI).
+what is the value of pi|what is pi	3.14159.
+what is the square root of 2|square root of 2	1.41421.
+what is the square root of 144|square root of 144	12.
+what is a prime number|define prime number	A number greater than 1 divisible only by 1 and itself.
+is 1 a prime number|is one prime	No.
+is 2 a prime number|is two prime	Yes, the only even prime.
+what is the smallest prime number|what is the first prime number	2.
+how many sides does a hexagon have|how many sides on a hexagon	6.
+how many sides does a pentagon have|how many sides on a pentagon	5.
+how many sides does an octagon have|how many sides on an octagon	8.
+how many degrees are in a circle|how many degrees in a circle	360.
+how many degrees are in a triangle|what do the angles of a triangle add up to	180.
+how do you convert celsius to fahrenheit|celsius to fahrenheit formula	F = C x 9/5 + 32.
+how do you convert fahrenheit to celsius|fahrenheit to celsius formula	C = (F - 32) x 5/9.
+what is 100 f in celsius|100 fahrenheit in celsius	37.8 C.
+what is 0 c in fahrenheit|0 celsius in fahrenheit	32 F.
+# Food and everyday
+how many calories are in a banana|how many calories does a banana have	About 105.
+how many calories are in an egg|how many calories does an egg have	About 72.
+how long do you boil an egg|how long to boil an egg	6 minutes soft, 10 minutes hard.
+what is the main ingredient in guacamole|what is guacamole made of	Avocado.
+what is tofu made of|what is tofu made from	Soybeans.
+what is bread made of|what is bread made from	Flour, water, yeast and salt.
+how much caffeine is in a cup of coffee|how much caffeine does coffee have	About 95 mg.
+what vitamin comes from the sun|which vitamin do you get from sunlight	Vitamin D.
+what vitamin is in oranges|which vitamin do oranges have	Vitamin C.
+# Technology and esp32
+what is an esp32|what is the esp32	A low-cost Wi-Fi and Bluetooth microcontroller from Espressif.
+who makes the esp32|who manufactures the esp32	Espressif Systems.
+how much ram does an esp32 have|how much memory does the esp32 have	520 KB of SRAM.
+how fast is the esp32|what is the clock speed of the esp32	Up to 240 MHz.
+how many cores does the esp32 have|how many cores does an esp32 have	2.
+what voltage does the esp32 use|what voltage does an esp32 run on	3.3 V.
+how much flash does an esp32 have|how much storage does the esp32 have	Usually 4 MB.
+what are you|who are you|what is your name	A tiny language model running on an ESP32.
+how big are you|how many parameters do you have	About half a million parameters.
+are you connected to the internet|do you use the internet	No. I run fully offline.
+what is ai|what is artificial intelligence	Software that performs tasks that normally need human intelligence.
+what is machine learning|define machine learning	Computers learning patterns from data instead of explicit rules.
+what is a neural network|define neural network	A model of layered weighted sums and nonlinearities trained on data.
+what is a transformer|what is a transformer model	A neural network built on self-attention.
+what is an llm|what is a large language model	A large neural network trained to predict the next token of text.
+what is a cpu|what does cpu stand for	Central processing unit.
+what is a gpu|what does gpu stand for	Graphics processing unit.
+what does ram stand for|what is ram	Random access memory.
+what does usb stand for|what is usb	Universal Serial Bus.
+what does html stand for|what is html	HyperText Markup Language.
+what does http stand for|what is http	HyperText Transfer Protocol.
+what does wifi stand for|what is wifi	Nothing. It is a brand name.
+what is binary|what is the binary system	A base-2 number system using 0 and 1.
+what is 10 in binary|10 in binary	1010.
+who founded microsoft|who started microsoft	Bill Gates and Paul Allen.
+who founded apple|who started apple	Steve Jobs, Steve Wozniak and Ronald Wayne.
+who created linux|who made linux	Linus Torvalds.
+who created python|who made python	Guido van Rossum.
+what year was python released|when was python released	1991.
+who created the c language|who made c	Dennis Ritchie.
+# Small talk, kept direct
+hello|hi|hey	Hello.
+how are you|how are you doing	Running fine.
+thank you|thanks	You're welcome.
+goodbye|bye	Goodbye.
+can you help me|will you help me	Yes. Ask a question.
+what can you do|what do you do	Answer short factual questions offline.
+tell me a joke|say something funny	I would, but my context window is too short for the setup.
+what is the meaning of life|what is the purpose of life	No single answer. 42, if you ask Douglas Adams.

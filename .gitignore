@@ -1,0 +1,4 @@
+__pycache__/
+*.pt
+host/tinyai
+firmware/.pio/

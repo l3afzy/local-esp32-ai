@@ -1,0 +1,83 @@
+// Runs the exact firmware engine on a PC.
+//
+//   make -C host
+//   ./host/tinyai firmware/data/model.bin               # chat
+//   echo "how fast is a cheetah" | ./host/tinyai firmware/data/model.bin
+//   ./host/tinyai firmware/data/model.bin --raw < qs    # skip the gate
+//   ./host/tinyai firmware/data/model.bin --why         # show the gate match
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#ifdef __unix__
+#include <unistd.h>
+#endif
+
+#include "tinyai.h"
+
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        fprintf(stderr, "usage: %s model.bin [--raw] [--time] [--why]\n", argv[0]);
+        return 1;
+    }
+    int raw = 0, timing = 0, why = 0;
+    for (int i = 2; i < argc; i++) {
+        if (!strcmp(argv[i], "--raw")) raw = 1;
+        if (!strcmp(argv[i], "--time")) timing = 1;
+        if (!strcmp(argv[i], "--why")) why = 1;
+    }
+    FILE *f = fopen(argv[1], "rb");
+    if (!f) {
+        perror(argv[1]);
+        return 1;
+    }
+    fseek(f, 0, SEEK_END);
+    long n = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    uint8_t *blob = (uint8_t *)malloc((size_t)n);  // malloc is 4-byte aligned
+    if (!blob || fread(blob, 1, (size_t)n, f) != (size_t)n) {
+        fprintf(stderr, "read failed\n");
+        return 1;
+    }
+    fclose(f);
+
+    tai_model m;
+    int rc = tai_load(&m, blob, (size_t)n);
+    if (rc) {
+        fprintf(stderr, "load failed: %d\n", rc);
+        return 1;
+    }
+    int tty = 0;
+#ifdef __unix__
+    tty = isatty(0);
+#endif
+    char line[512], out[128];
+    for (;;) {
+        if (tty) {
+            printf("you: ");
+            fflush(stdout);
+        }
+        if (!fgets(line, sizeof line, stdin)) break;
+        line[strcspn(line, "\r\n")] = 0;
+        clock_t t0 = clock();
+        if (raw) tai_generate(&m, line, out, sizeof out);
+        else tai_ask(&m, line, out, sizeof out);
+        double ms = 1000.0 * (double)(clock() - t0) / CLOCKS_PER_SEC;
+        if (tty) printf("esp: ");
+        printf("%s", out);
+        if (timing) printf("\t%.1f ms", ms);
+        if (why) {
+            char norm[TAI_MAX_Q + 1];
+            tai_normalize(line, norm, sizeof norm);
+            int g = tai_gate(&m, norm);
+            const char *k = m.known;
+            for (int i = 1; i < g; i++) k += strlen(k) + 1;
+            printf("\t[%s] -> [%s]", norm, g ? k : "-");
+        }
+        printf("\n");
+        fflush(stdout);
+    }
+    tai_free(&m);
+    free(blob);
+    return 0;
+}

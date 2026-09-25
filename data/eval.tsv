@@ -1,0 +1,72 @@
+# Held-out questions: NOT in facts.tsv. Tests paraphrase handling and refusal.
+# question<TAB>expected answer ("I don't know." = must refuse)
+how much does a humming bird weigh	Between 2 and 20 grams.
+hummingbird weight	Between 2 and 20 grams.
+how much do hummingbirds weigh	Between 2 and 20 grams.
+whats the weight of a hummingbird?	Between 2 and 20 grams.
+cheetah top speed	About 110 km/h.
+how many legs has a spider	8.
+spider legs how many	8.
+octopus hearts	3.
+biggest animal on the planet	The blue whale.
+what's the tallest animal	The giraffe.
+How far away is the Moon from Earth?	About 384,400 km.
+distance from earth to the sun	About 150 million km.
+how many planets in our solar system	8.
+biggest planet in the solar system	Jupiter.
+which planet is the hottest one	Venus.
+first man on the moon	Neil Armstrong.
+speed of light?	299,792 km/s.
+boiling point of water	100 C at sea level.
+water freezing point	0 C.
+symbol for gold	Au.
+chemical formula of water	H2O.
+capital city of France	Paris.
+France capital	Paris.
+what is the capital city of japan	Tokyo.
+capital of australia?	Canberra.
+tallest mountain on earth	Mount Everest.
+how tall is everest	8,849 meters.
+longest river on earth	The Nile.
+when did ww2 end	1945.
+who painted mona lisa	Leonardo da Vinci.
+who wrote the book 1984	George Orwell.
+how many bones in the human body	206.
+how many bits in one byte	8.
+how many seconds are there in an hour	3,600.
+pi	3.14159.
+how many cores does esp32 have	2.
+who created the python language	Guido van Rossum.
+who invented the telephone?	Alexander Graham Bell.
+hello there	Hello.
+thanks	You're welcome.
+# must refuse
+what is the capital of bolivia	I don't know.
+what is the capital of mongolia	I don't know.
+how much does a horse weigh	I don't know.
+how fast can a horse run	I don't know.
+how many legs does a centipede have	I don't know.
+who wrote war and peace	I don't know.
+who painted the scream	I don't know.
+when did the french revolution start	I don't know.
+what is the chemical symbol for lead	I don't know.
+how far is jupiter	I don't know.
+what is 12 in binary	I don't know.
+who is the president of france	I don't know.
+what is the weather tomorrow	I don't know.
+what is quantum entanglement	I don't know.
+how do i bake a cake	I don't know.
+what is the population of tokyo	I don't know.
+how many moons does jupiter have	I don't know.
+what is the stock price of apple	I don't know.
+who won the world cup	I don't know.
+what is the melting point of iron	I don't know.
+# calculator
+what is 12 times 7	84
+12*7	84
+what is 2^10	1024
+15% of 80	12
+(3+4)*5	35
+100 divided by 8	12.5
+what is 7 minus 10	-3
+1/0	Undefined, division by zero.
