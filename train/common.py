@@ -47,9 +47,16 @@ def encode_example(q, a):
     return p + [encode_char(c) for c in a[:MAX_A]] + [EOS], len(p)
 
 
+def canonical(questions):
+    """The one phrasing the model learns for a fact: the shortest. The gate
+    maps every accepted phrasing to it, and on the device each prompt
+    character costs a full forward pass, so shorter keys answer faster."""
+    return min((normalize(q) for q in questions), key=lambda q: (len(q), q))
+
+
 def load_facts(pattern=FACT_FILES):
-    """[(questions, answer)]. The first question of each fact is its canonical
-    form: the gate maps every phrasing to it, and it is all the model sees."""
+    """[(questions, answer)]. Any phrasing is accepted; the model is trained on
+    canonical(questions) only."""
     facts = []
     for path in sorted(glob.glob(pattern)):
         for line in open(path, encoding="utf-8"):

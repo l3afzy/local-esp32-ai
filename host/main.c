@@ -5,6 +5,8 @@
 //   echo "how fast is a cheetah" | ./host/tinyai firmware/data/model.bin
 //   ./host/tinyai firmware/data/model.bin --raw < qs    # skip the gate
 //   ./host/tinyai firmware/data/model.bin --why         # show the gate match
+//   ./host/tinyai firmware/data/model.bin --route       # 0 model, 1 computed, 2 refused
+//   ./host/tinyai firmware/data/model.bin --words       # how the gate parses each line
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,14 +19,16 @@
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "usage: %s model.bin [--raw] [--time] [--why]\n", argv[0]);
+        fprintf(stderr, "usage: %s model.bin [--raw] [--time] [--why] [--route] [--words]\n", argv[0]);
         return 1;
     }
-    int raw = 0, timing = 0, why = 0;
+    int raw = 0, timing = 0, why = 0, route = 0, words = 0;
     for (int i = 2; i < argc; i++) {
         if (!strcmp(argv[i], "--raw")) raw = 1;
         if (!strcmp(argv[i], "--time")) timing = 1;
         if (!strcmp(argv[i], "--why")) why = 1;
+        if (!strcmp(argv[i], "--route")) route = 1;
+        if (!strcmp(argv[i], "--words")) words = 1;
     }
     FILE *f = fopen(argv[1], "rb");
     if (!f) {
@@ -59,13 +63,21 @@ int main(int argc, char **argv) {
         }
         if (!fgets(line, sizeof line, stdin)) break;
         line[strcspn(line, "\r\n")] = 0;
+        if (words) {  // the line is already normalized (as stored in the index)
+            char w[512];
+            tai_gate_words(line, w, sizeof w);
+            printf("%s\n", w);
+            continue;
+        }
         clock_t t0 = clock();
+        int r = 0;
         if (raw) tai_generate(&m, line, out, sizeof out);
-        else tai_ask(&m, line, out, sizeof out);
+        else r = tai_ask(&m, line, out, sizeof out);
         double ms = 1000.0 * (double)(clock() - t0) / CLOCKS_PER_SEC;
         if (tty) printf("esp: ");
         printf("%s", out);
         if (timing) printf("\t%.1f ms", ms);
+        if (route) printf("\t%d", r);
         if (why) {
             char norm[TAI_MAX_Q + 1];
             tai_normalize(line, norm, sizeof norm);

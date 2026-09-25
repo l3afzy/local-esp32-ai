@@ -13,6 +13,36 @@ static tai_model model;
 static char line[256];
 static size_t line_len = 0;
 
+#if !CONFIG_FREERTOS_UNICORE
+// Dual-core ESP32 / ESP32-S3: every matmul is split in half and the second
+// half runs on the other core. Rows are independent, so the answers are
+// bit-identical to single-core; only the time changes.
+static TaskHandle_t caller, worker;
+static volatile tai_job job;
+static void *volatile job_ctx;
+static volatile int job_lo, job_hi;
+
+static void worker_task(void *) {
+    for (;;) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        job(job_ctx, job_lo, job_hi);
+        xTaskNotifyGive(caller);
+    }
+}
+
+static void run_on_both_cores(tai_job fn, void *ctx, int n) {
+    int mid = n / 2;
+    caller = xTaskGetCurrentTaskHandle();
+    job = fn;
+    job_ctx = ctx;
+    job_lo = mid;
+    job_hi = n;
+    xTaskNotifyGive(worker);
+    fn(ctx, 0, mid);
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+}
+#endif
+
 void setup() {
     Serial.begin(115200);
     delay(500);
@@ -21,8 +51,18 @@ void setup() {
         Serial.printf("model load failed (%d)\n", rc);
         for (;;) delay(1000);
     }
-    Serial.printf("\ntinyai ready: %d facts, %u KB model, %u KB heap free\n", model.n_facts,
-                  model_data_len / 1024, (unsigned)(ESP.getFreeHeap() / 1024));
+    int cores = 1;
+#if !CONFIG_FREERTOS_UNICORE
+    // the loop task runs on ARDUINO_RUNNING_CORE; put the worker on the other
+    if (xTaskCreatePinnedToCore(worker_task, "tinyai", 4096, NULL, 2, &worker,
+                                1 - xPortGetCoreID()) == pdPASS) {
+        tai_set_parallel(&model, run_on_both_cores);
+        cores = 2;
+    }
+#endif
+    Serial.printf("\ntinyai ready: %d facts, %u KB model, %d cores, %u KB heap free\n",
+                  model.n_facts, model_data_len / 1024, cores,
+                  (unsigned)(ESP.getFreeHeap() / 1024));
     Serial.print("you: ");
 }
 

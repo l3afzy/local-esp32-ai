@@ -1,8 +1,16 @@
-// Knowledge gate. A 700k-parameter model has no idea what it does not know:
-// ask it for the capital of Bolivia and it will confidently say something.
+// Knowledge gate. A 600k-parameter model has no idea what it does not know:
+// ask it for the capital of Wakanda and it will confidently say something.
 // So before generating, check that the question's content words match a
 // question the model was trained on. If not, answer "I don't know." —
 // a direct answer beats a wrong one.
+//
+// The phrasings are indexed at export time (train/gate_index.py): each input
+// word is fuzzy-matched once against a dictionary of known words, then every
+// phrasing is scored with integer compares. content_words() and qtype() here
+// define the rules; gate_index.py mirrors them and train/evaluate.py checks
+// that the two agree.
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "tinyai.h"
@@ -107,52 +115,54 @@ static int word_match(const char *a, const char *b) {
     return d <= (shorter >= 8 ? 2 : 1);
 }
 
-// 2 = exact word present, 1 = typo/plural match, 0 = absent.
-static int found(const char *w, char o[MAX_WORDS][MAX_WLEN], int no) {
-    int best = 0;
-    for (int j = 0; j < no && best < 2; j++)
-        if (!strcmp(w, o[j])) best = 2;
-        else if (word_match(w, o[j])) best = 1;
-    return best;
-}
+#define MAX_HITS 24
 
 typedef struct {
-    int hard_missing;  // content words of `w` not found (soft words excused)
-    int matched;       // words found
-    int quality;       // sum of found() scores
-} coverage;
+    uint16_t id;
+    uint8_t q;  // 2 = exact, 1 = typo/plural
+} hit;
 
-// How well the words of `w` are covered by `o`. Split words are joined:
-// "humming bird" matches "hummingbird".
-static coverage covered(char w[MAX_WORDS][MAX_WLEN], int n, char o[MAX_WORDS][MAX_WLEN], int no) {
-    coverage c = {0, 0, 0};
-    for (int i = 0; i < n; i++) {
-        int f = found(w[i], o, no);
-        if (!f && i + 1 < n && strlen(w[i]) + strlen(w[i + 1]) < MAX_WLEN) {
-            char joined[MAX_WLEN];
-            strcpy(joined, w[i]);
-            strcat(joined, w[i + 1]);
-            if ((f = found(joined, o, no)) != 0) {
-                c.matched++;
-                c.quality += f;
-                i++;
-            }
+typedef struct {
+    hit h[MAX_HITS];
+    int n;
+} hits;
+
+// Every dictionary word matching `w`, exact or fuzzy.
+static void lookup(const tai_model *m, const char *w, hits *out) {
+    out->n = 0;
+    int lw = (int)strlen(w), lo = 0, hi = m->n_words - 1;
+    while (lo <= hi) {  // exact: binary search, the dictionary is sorted
+        int mid = (lo + hi) / 2, c = strcmp(w, m->words + m->word_off[mid]);
+        if (!c) {
+            out->h[out->n++] = (hit){(uint16_t)mid, 2};
+            break;
         }
-        if (f) {
-            c.matched++;
-            c.quality += f;
-        } else if (!is_soft(w[i])) {
-            c.hard_missing++;
-        }
+        if (c < 0) hi = mid - 1;
+        else lo = mid + 1;
     }
-    return c;
+    for (int i = 0; i < m->n_words && out->n < MAX_HITS; i++) {
+        int d = lw - m->word_len[i];
+        if (d > 2 || d < -2) continue;  // no fuzzy match spans more than 2 letters
+        const char *k = m->words + m->word_off[i];
+        if (strcmp(w, k) && word_match(w, k)) out->h[out->n++] = (hit){(uint16_t)i, 1};
+    }
 }
 
-// Question type: "who", "when", "how many", "how far", ... or "" if none.
+static int quality(const hits *h, uint16_t id) {
+    int q = 0;
+    for (int i = 0; i < h->n; i++)
+        if (h->h[i].id == id && h->h[i].q > q) q = h->h[i].q;
+    return q;
+}
+
+// Question type code, in the order of QTYPES in train/gate_index.py:
+// "", what, who, when, where, why, how, how many, how much, ...
 // A "how many" question must never be answered by a "what" fact:
 // "how many moons does jupiter have" is not "what is jupiter's largest moon".
-static void qtype(const char *s, char *t, int t_len) {
-    t[0] = 0;
+static const char *const HOW[] = {"many", "much", "long", "far", "fast", "old", "big", "tall",
+                                  "heavy", "hot", "cold", "deep", "high", "often", "smart"};
+
+static int qtype(const char *s) {
     char w[MAX_WLEN];
     while (*s) {
         int len = 0;
@@ -162,44 +172,32 @@ static void qtype(const char *s, char *t, int t_len) {
             s++;
         }
         w[len] = 0;
-        const char *type = NULL;
         while (*s == ' ') s++;
-        if ((!strcmp(w, "what") || !strcmp(w, "which")) && !strncmp(s, "year", 4) &&
-            (s[4] == ' ' || s[4] == 0))
-            type = "when";  // "what year did ww2 end" asks when
-        else if (!strcmp(w, "what") || !strcmp(w, "whats") || !strcmp(w, "which")) type = "what";
-        else if (!strcmp(w, "who") || !strcmp(w, "whos") || !strcmp(w, "whose")) type = "who";
-        else if (!strcmp(w, "when") || !strcmp(w, "where") || !strcmp(w, "why")) type = w;
-        if (type) {
-            strncpy(t, type, (size_t)t_len - 1);
-            t[t_len - 1] = 0;
-            return;
-        }
+        int next_year = !strncmp(s, "year", 4) && (s[4] == ' ' || s[4] == 0);
+        if ((!strcmp(w, "what") || !strcmp(w, "which")) && next_year) return 3;  // "what year" asks when
+        if (!strcmp(w, "what") || !strcmp(w, "whats") || !strcmp(w, "which")) return 1;
+        if (!strcmp(w, "who") || !strcmp(w, "whos") || !strcmp(w, "whose")) return 2;
+        if (!strcmp(w, "when")) return 3;
+        if (!strcmp(w, "where")) return 4;
+        if (!strcmp(w, "why")) return 5;
         if (!strcmp(w, "how")) {
-            static const char *const HOW[] = {"many", "much", "long", "far", "fast", "old", "big",
-                                              "tall", "heavy", "hot", "cold", "deep", "high",
-                                              "often", "smart"};
-            strcpy(t, "how");
-            for (size_t i = 0; i < sizeof HOW / sizeof *HOW; i++) {
+            for (int i = 0; i < (int)(sizeof HOW / sizeof *HOW); i++) {
                 size_t n = strlen(HOW[i]);
-                if (!strncmp(s, HOW[i], n) && (s[n] == ' ' || s[n] == 0)) {
-                    strcat(t, " ");
-                    strcat(t, HOW[i]);
-                    break;
-                }
+                if (!strncmp(s, HOW[i], n) && (s[n] == ' ' || s[n] == 0)) return 7 + i;
             }
-            return;
+            return 6;
         }
     }
+    return 0;
 }
 
 // Character-bigram overlap (Dice coefficient) of two strings, 0..1000.
 static int dice(const char *a, const char *b) {
     int la = (int)strlen(a), lb = (int)strlen(b), common = 0;
     if (la < 2 || lb < 2) return strcmp(a, b) ? 0 : 1000;
-    unsigned char used[TAI_MAX_Q + 1] = {0};
+    unsigned char used[256] = {0};
     for (int i = 0; i + 1 < la; i++)
-        for (int j = 0; j + 1 < lb && j < TAI_MAX_Q; j++)
+        for (int j = 0; j + 1 < lb && j < 255; j++)
             if (!used[j] && a[i] == b[j] && a[i + 1] == b[j + 1]) {
                 used[j] = 1;
                 common++;
@@ -208,39 +206,117 @@ static int dice(const char *a, const char *b) {
     return 2000 * common / (la - 1 + lb - 1);
 }
 
-// Picks the known question closest to the input. Every content word of the
+// Picks the known phrasing closest to the input. Every content word of the
 // input must be accounted for, the question types must agree, and the known
-// question must be at least half present in the input. Among those, exact
-// words beat typo matches and leftover unmatched words cost points.
+// phrasing must be at least half present in the input. Among those, exact
+// words beat typo matches and leftover unmatched words cost points. Ties go
+// to the phrasing with the same word order ("fahrenheit to celsius" is not
+// "celsius to fahrenheit"), then the closest length.
 // 0 = refuse, else 1 + fact index.
 int tai_gate(const tai_model *m, const char *norm) {
-    char in[MAX_WORDS][MAX_WLEN], kw[MAX_WORDS][MAX_WLEN], tin[16], tk[16];
-    int n = content_words(norm, in);
-    qtype(norm, tin, sizeof tin);
+    char in[MAX_WORDS][MAX_WLEN];
+    int n = content_words(norm, in), tin = qtype(norm), len = (int)strlen(norm);
+    // One dictionary lookup per input word, and per adjacent pair joined
+    // ("humming bird" -> "hummingbird"). Static: too big for a small stack.
+    static hits word[MAX_WORDS], joined[MAX_WORDS];
+    int soft[MAX_WORDS], can_join[MAX_WORDS];
+    for (int i = 0; i < n; i++) {
+        lookup(m, in[i], &word[i]);
+        soft[i] = is_soft(in[i]);
+        can_join[i] = i + 1 < n && strlen(in[i]) + strlen(in[i + 1]) < MAX_WLEN;
+        if (can_join[i]) {
+            char j[MAX_WLEN];
+            strcpy(j, in[i]);
+            strcat(j, in[i + 1]);
+            lookup(m, j, &joined[i]);
+        }
+    }
+
     long best_score = -1;
     int best = 0;
-    const char *k = m->known;
-    for (int i = 0; i < m->n_known; i++, k += strlen(k) + 1) {
-        int nk = content_words(k, kw);
+    const uint16_t *ids = m->known_words;
+    const char *talk = m->small_talk;
+    for (int p = 0; p < m->n_known; p++) {
+        int nk = m->known_nwords[p];
+        const uint16_t *k = ids;
+        ids += nk;
+        const char *text = NULL;
+        if (nk == 0) {
+            text = talk;
+            talk += strlen(talk) + 1;
+        }
+        int tk = m->known_qtype[p];
+        if (tin && tk && tin != tk) continue;
         long score;
-        qtype(k, tk, sizeof tk);
-        if (tin[0] && tk[0] && strcmp(tin, tk)) continue;
         if (n == 0 || nk == 0) {
             // Small talk ("hi", "how are you"): nothing to fact-check, so
             // match the whole phrase instead.
             if (n != nk) continue;
-            int d = dice(norm, k);
+            int d = dice(norm, text);
             if (d < 500) continue;
             score = d;
         } else {
-            coverage a = covered(in, n, kw, nk), b = covered(kw, nk, in, n);
-            if (a.hard_missing || 2 * b.matched < nk) continue;
-            score = 1000L * (a.quality + b.quality - 2 * (nk - b.matched)) + dice(norm, k);
+            // input side: every word found, or excused as soft
+            int a_quality = 0, hard_missing = 0, in_order = 0, last_pos = -1;
+            for (int i = 0; i < n && !hard_missing; i++) {
+                int f = 0, pos = -1;
+                for (int j = 0; j < nk; j++) {
+                    int q = quality(&word[i], k[j]);
+                    if (q > f) {
+                        f = q;
+                        pos = j;
+                    }
+                }
+                if (pos >= 0) {
+                    in_order += pos > last_pos;
+                    last_pos = pos;
+                }
+                if (!f && can_join[i]) {
+                    for (int j = 0; j < nk; j++) {
+                        int q = quality(&joined[i], k[j]);
+                        if (q > f) f = q;
+                    }
+                    if (f) {
+                        a_quality += 2 * f;  // both halves count
+                        i++;
+                        continue;
+                    }
+                }
+                if (f) a_quality += f;
+                else if (!soft[i]) hard_missing = 1;
+            }
+            if (hard_missing) continue;
+            // known side: at least half of the phrasing's words present
+            int b_quality = 0, b_matched = 0;
+            for (int j = 0; j < nk; j++) {
+                int f = 0;
+                for (int i = 0; i < n; i++) {
+                    int q = quality(&word[i], k[j]);
+                    if (q > f) f = q;
+                    if (can_join[i] && (q = quality(&joined[i], k[j])) > f) f = q;
+                }
+                if (f) {
+                    b_matched++;
+                    b_quality += f;
+                }
+            }
+            if (2 * b_matched < nk) continue;
+            int d = abs(len - m->known_len[p]);
+            score = 1000L * (a_quality + b_quality - 2 * (nk - b_matched)) + 60L * in_order +
+                    (d > 59 ? 0 : 59 - d);
         }
         if (score > best_score) {
             best_score = score;
-            best = m->known_fact[i] + 1;
+            best = m->known_fact[p] + 1;
         }
     }
     return best;
+}
+
+// For tests: "<qtype> <content words...>" of a string, as the gate sees it.
+int tai_gate_words(const char *norm, char *out, int out_len) {
+    char w[MAX_WORDS][MAX_WLEN];
+    int n = content_words(norm, w), o = snprintf(out, (size_t)out_len, "%d", qtype(norm));
+    for (int i = 0; i < n && o < out_len; i++) o += snprintf(out + o, (size_t)(out_len - o), " %s", w[i]);
+    return n;
 }

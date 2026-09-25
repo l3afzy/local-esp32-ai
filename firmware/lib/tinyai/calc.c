@@ -130,6 +130,7 @@ static int strip_prefix(char *s, const char *pre) {
 
 // Returns 1 and writes the result if `norm` is an arithmetic question.
 int tai_calc(const char *norm, char *out, int out_len) {
+    if (tai_convert(norm, out, out_len)) return 1;
     char s[TAI_MAX_Q + 1];
     strncpy(s, norm, sizeof s - 1);
     s[sizeof s - 1] = 0;

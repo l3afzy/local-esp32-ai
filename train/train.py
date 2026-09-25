@@ -1,11 +1,11 @@
 """Train the tiny GPT on direct question -> answer pairs.
 
-    python train/train.py                # ~15 min on a 4-core CPU
+    python train/train.py                # ~45 min on a 4-core CPU
     python train/train.py --steps 300    # smoke test
 
-The model sees one canonical question per fact. On the device the knowledge
-gate maps whatever the user typed to that canonical question first, so no
-capacity is spent on typos and rephrasings — it all goes into facts.
+The model sees one canonical key per fact: its shortest phrasing. On the
+device the knowledge gate maps whatever the user typed to that key first, so
+no capacity is spent on typos and rephrasings — it all goes into facts.
 
 Loss is on answer characters only: the model never learns to produce a
 preamble or a sign-off. The last part of training is quantization-aware,
@@ -19,7 +19,7 @@ import time
 import torch
 import torch.nn.functional as F
 
-from common import EOS, SEP, decode_tok, encode_char, encode_example, load_facts, normalize
+from common import EOS, SEP, canonical, decode_tok, encode_char, encode_example, load_facts, normalize
 from model import Config, TinyGPT
 
 
@@ -52,7 +52,7 @@ def answer(model, q, cfg, max_new=48):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="train/ckpt.pt")
-    ap.add_argument("--steps", type=int, default=5000)
+    ap.add_argument("--steps", type=int, default=12000)
     ap.add_argument("--qat-from", type=float, default=0.5, help="fraction of steps before QAT starts")
     ap.add_argument("--batch", type=int, default=128)
     ap.add_argument("--lr", type=float, default=2e-3)
@@ -64,8 +64,10 @@ def main():
     rng = random.Random(args.seed)
     torch.manual_seed(args.seed)
     facts = load_facts()
-    examples = [encode_example(qs[0], a) for qs, a in facts]
+    examples = [encode_example(canonical(qs), a) for qs, a in facts]
     cfg = Config(dim=args.dim, layers=args.layers, hidden=3 * args.dim)
+    too_long = [canonical(qs) for (qs, _), (t, _) in zip(facts, examples) if len(t) > cfg.ctx]
+    assert not too_long, f"key + answer exceed the {cfg.ctx}-token context: {too_long[:3]}"
     model = TinyGPT(cfg)
     print(f"{len(facts)} facts, {sum(p.numel() for p in model.parameters()):,} params")
 
@@ -90,7 +92,7 @@ def main():
             print(f"step {step:5d}  loss {loss.item():.4f}  lr {lr:.2e}  {time.time() - t0:.0f}s", flush=True)
 
     model.eval()
-    wrong = [(qs[0], a) for qs, a in facts if answer(model, qs[0], cfg) != a]
+    wrong = [(canonical(qs), a) for qs, a in facts if answer(model, canonical(qs), cfg) != a]
     print(f"exact match (int4 weights): {len(facts) - len(wrong)}/{len(facts)}")
     for q, a in wrong[:20]:
         print(f"    {q!r} -> {answer(model, q, cfg)!r}, want {a!r}")

@@ -118,9 +118,23 @@ int tai_load(tai_model *m, const uint8_t *blob, size_t len) {
     }
     m->norm = (const float *)take(&r, (size_t)D * 4);
     m->facts = take_strings(&r);
-    m->known = take_strings(&r);
+    const uint32_t *nw = (const uint32_t *)take(&r, 4);
+    if (!m->norm || !m->facts || !nw) return -1;
+    m->n_words = (int)*nw;
+    m->words = take_strings(&r);
+    m->word_off = (const uint32_t *)take(&r, (size_t)m->n_words * 4);
+    m->word_len = (const uint8_t *)take(&r, (size_t)m->n_words);
     m->known_fact = (const uint16_t *)take(&r, (size_t)m->n_known * 2);
-    if (!m->norm || !m->facts || !m->known || !m->known_fact) return -1;
+    m->known_qtype = (const uint8_t *)take(&r, (size_t)m->n_known);
+    m->known_nwords = (const uint8_t *)take(&r, (size_t)m->n_known);
+    m->known_len = (const uint8_t *)take(&r, (size_t)m->n_known);
+    const uint32_t *n_ids = (const uint32_t *)take(&r, 4);
+    if (!m->words || !m->word_off || !m->word_len || !m->known_fact || !m->known_qtype ||
+        !m->known_nwords || !m->known_len || !n_ids)
+        return -1;
+    m->known_words = (const uint16_t *)take(&r, (size_t)*n_ids * 2);
+    m->small_talk = take_strings(&r);
+    if (!m->known_words || !m->small_talk) return -1;
 
     int big = H > D ? H : D;
     m->x = (float *)zalloc((size_t)D * 4);
@@ -208,13 +222,21 @@ static void set_input(tai_model *m, const float *x, int n) {
 #define ALIGNED4(p) (p)
 #endif
 
-// o = W x for int4 W, with x already set by set_input().
-static void matmul4(float *o, const tai_model *m, const tai_q4 *w) {
+typedef struct {
+    float *o;
+    const tai_model *m;
+    const tai_q4 *w;
+} mm_job;
+
+// Rows [lo, hi) of o = W x for int4 W, with x already set by set_input().
+static void matmul4_rows(void *ctx, int lo, int hi) {
+    const mm_job *j = (const mm_job *)ctx;
+    const tai_q4 *w = j->w;
     int groups = w->cols / TAI_GROUP;
-    const uint8_t *p = w->q;
-    const float *s = w->s;
-    for (int r = 0; r < w->rows; r++) {
-        const int8_t *x = m->xq;
+    const uint8_t *p = w->q + (size_t)lo * (w->cols / 2);
+    const float *s = w->s + (size_t)lo * groups;
+    for (int r = lo; r < hi; r++) {
+        const int8_t *x = j->m->xq;
         float acc = 0;
         for (int g = 0; g < groups; g++, s++) {
             int32_t dot = 0;
@@ -226,11 +248,19 @@ static void matmul4(float *o, const tai_model *m, const tai_q4 *w) {
                        (int32_t)((b >> 16) & 15) * x[4] + (int32_t)((b >> 20) & 15) * x[5] +
                        (int32_t)((b >> 24) & 15) * x[6] + (int32_t)(b >> 28) * x[7];
             }
-            acc += (float)(dot - 8 * m->xsum[g]) * *s;
+            acc += (float)(dot - 8 * j->m->xsum[g]) * *s;
         }
-        o[r] = acc * m->xs;
+        j->o[r] = acc * j->m->xs;
     }
 }
+
+static void matmul4(float *o, const tai_model *m, const tai_q4 *w) {
+    mm_job j = {o, m, w};
+    if (m->parallel && w->rows >= 32) m->parallel(matmul4_rows, &j, w->rows);
+    else matmul4_rows(&j, 0, w->rows);
+}
+
+void tai_set_parallel(tai_model *m, tai_parallel_fn fn) { m->parallel = fn; }
 
 static void mm4(float *o, tai_model *m, const float *x, const tai_q4 *w) {
     set_input(m, x, w->cols);
@@ -355,8 +385,8 @@ int tai_ask(tai_model *m, const char *question, char *out, int out_len) {
         copy_out(out, out_len, "I don't know.");
         return 2;
     }
-    // The model answers the canonical question the gate matched, not the raw
-    // text: it only ever sees inputs it was trained on.
+    // The model answers the matched fact's canonical key (its shortest
+    // phrasing), not the raw text: it only ever sees inputs it was trained on.
     generate_normalized(m, tai_fact(m, fact - 1), out, out_len);
     return 0;
 }

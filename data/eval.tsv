@@ -33,7 +33,7 @@ who painted mona lisa	Leonardo da Vinci.
 who wrote the book 1984	George Orwell.
 how many bones in the human body	206.
 how many bits in one byte	8.
-how many seconds are there in an hour	3,600.
+how many seconds are there in an hour	3,600 seconds
 pi	3.14159.
 how many cores does esp32 have	2.
 who created the python language	Guido van Rossum.
@@ -70,8 +70,23 @@ who invented the radio?	Guglielmo Marconi, with others.
 what is a baby horse called	A foal.
 what port does ssh use	22.
 esp32 deep sleep current	About 10 uA.
+# answerable since the element and country data was added
+symbol for bismuth	Bi.
+silver melting point	962 C.
+whats the boiling point of mercury	357 C.
+how dense is gold	19.3 g/cm3.
+is mercury a liquid	A liquid.
+who discovered radium	Pierre and Marie Curie.
+what group is carbon in	Group 14.
+what element is number 79	Gold.
+atomic mass of iron	55.845 u.
+what currency does switzerland use	Swiss Franc (CHF).
+calling code for japan	+81.
+what is the country code for germany	+49 to call; DE as an ISO code.
+what is the boltzmann constant	1.380649 x 10^-23 J/K.
+how do you convert fahrenheit to celsius	C = (F - 32) x 5/9.
 # must refuse
-what is 12 in binary	I don't know.
+what is 12 in hex	C
 who is the president of france	I don't know.
 what is quantum entanglement	I don't know.
 how do i bake a cake	I don't know.
@@ -82,11 +97,12 @@ what is the capital of wakanda	I don't know.
 how much does a moose weigh	I don't know.
 how fast can a kangaroo run	I don't know.
 how many legs does a millipede have	I don't know.
+what is 12 in base 7	I don't know.
 who painted sunflowers	I don't know.
 when did the vietnam war end	I don't know.
-what is the chemical symbol for bismuth	I don't know.
+what is the chemical symbol for kryptonite	I don't know.
 what is the population of bolivia	I don't know.
-what is the melting point of silver	I don't know.
+what is the melting point of chocolate	I don't know.
 how long do crocodiles live	I don't know.
 who wrote the bible	I don't know.
 how far is pluto	I don't know.
@@ -103,3 +119,12 @@ square root of 144	12
 what is 5 squared	25
 sqrt 2	1.41421
 what is the square root of 81	9
+10 km in miles	6.21371 miles
+how many feet in a mile	5,280 feet
+what is 100 f in celsius	37.7778 C
+how many ounces in 2 pounds	32 ounces
+convert 3 cups to ml	709.765 milliliters
+1994 in roman numerals	MCMXCIV
+what is 255 in binary	11111111
+is 91 prime	No, 91 = 7 x 13.
+is 97 a prime number	Yes.

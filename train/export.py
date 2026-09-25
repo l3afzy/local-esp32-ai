@@ -6,17 +6,17 @@ Writes:
     firmware/data/model.bin        raw model (host build loads this)
     firmware/src/model_data.h      same bytes as a C array (flashed with the firmware)
 
-Format v2 (little endian, every block padded to 4 bytes):
-    u32 magic "TAI1", version 2, vocab, ctx, dim, layers, heads, kv_heads,
+Format v3 (little endian, every block padded to 4 bytes):
+    u32 magic "TAI1", version 3, vocab, ctx, dim, layers, heads, kv_heads,
         hidden, n_facts, n_known
     tok, pos      int8 [rows*cols] + f32 [rows] scales
     per layer:    n1 f32[dim], wq wk wv wo (int4), n2 f32[dim], w1 w2 (int4)
                   int4 = [rows*cols/2] bytes, two weights per byte, low
                   nibble first, stored +8; then f32 [rows*cols/32] scales
     norm          f32[dim]
-    facts         u32 bytes + canonical questions, NUL-separated
-    known         u32 bytes + every accepted phrasing, NUL-separated
-    known_fact    u16 [n_known]: which fact each phrasing belongs to
+    facts         u32 bytes + each fact's canonical key (shortest phrasing)
+    gate index    see train/gate_index.py: word dictionary, and per accepted
+                  phrasing its fact, question type, length and word ids
 """
 
 import argparse
@@ -25,7 +25,8 @@ import struct
 import numpy as np
 import torch
 
-from common import load_facts, normalize
+import gate_index
+from common import canonical, load_facts, normalize
 from model import GROUP, quantize_int4
 
 
@@ -73,14 +74,14 @@ def main():
     ck = torch.load(args.ckpt, map_location="cpu")
     c, sd = ck["cfg"], ck["model"]
     facts = load_facts()
-    canonical = [normalize(qs[0]) for qs, _ in facts]
+    keys = [canonical(qs) for qs, _ in facts]
     known = {}
     for i, (qs, _) in enumerate(facts):
         for q in qs:
             known.setdefault(normalize(q), i)  # first fact wins a shared phrasing
     assert len(facts) < 65536
 
-    out = [struct.pack("<11I", 0x31494154, 2, c["vocab"], c["ctx"], c["dim"], c["layers"],
+    out = [struct.pack("<11I", 0x31494154, 3, c["vocab"], c["ctx"], c["dim"], c["layers"],
                        c["heads"], c["kv_heads"], c["hidden"], len(facts), len(known)),
            q8(sd["tok.weight"]), q8(sd["pos.weight"])]
     for l in range(c["layers"]):
@@ -90,9 +91,9 @@ def main():
         out.append(f32(sd[p + "n2.w"]))
         out += [q4(sd[p + n + ".weight"]) for n in ("w1", "w2")]
     out.append(f32(sd["norm.w"]))
-    out.append(strings(canonical))
-    out.append(strings(list(known)))
-    out.append(pad4(np.array(list(known.values()), dtype="<u2").tobytes()))
+    out.append(strings(keys))
+    index, n_words = gate_index.build(list(known.items()))
+    out.append(index)
     data = b"".join(out)
 
     with open(args.bin, "wb") as f:
@@ -106,7 +107,8 @@ def main():
         f.write("};\n")
     n_params = sum(v.numel() for v in sd.values())
     print(f"{n_params:,} params -> {len(data):,} bytes ({8 * len(data) / n_params:.2f} bits/param "
-          f"incl. text), {len(facts)} facts, {len(known)} phrasings")
+          f"incl. text), {len(facts)} facts, {len(known)} phrasings, {n_words} indexed words, "
+          f"gate index {len(index):,} bytes")
 
 
 if __name__ == "__main__":
