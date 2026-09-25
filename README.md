@@ -148,7 +148,7 @@ Scored by `train/evaluate.py`, which runs the real C engine (the same code the E
   | ESP32-S3 | 789 KB (25%) | 18.8 KB |
   | ESP32-C3 | 775 KB (25%) | 14.2 KB |
 
-- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image: it boots, loads the model with 283 KB of heap to spare, and gives the same answers as the PC build on all 100 held-out questions.
+- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image: it boots, loads the model with 283 KB of heap to spare, and gives the same answers as the PC build on all 100 held-out questions and all 2,416 trained phrasings.
 - **Not yet timed on physical hardware.** Emulator timings aren't real. A rough estimate from the instruction count is 1 to 2 seconds per answer on a classic ESP32 at 240 MHz; on a laptop it takes about 20 ms. To measure on a board, set `SHOW_TIMING 1` in `firmware/src/main.cpp`.
 
 Re-run the emulator check yourself (needs [Espressif's QEMU](https://github.com/espressif/qemu/releases)):
