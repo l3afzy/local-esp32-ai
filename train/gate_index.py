@@ -26,7 +26,7 @@ STOP = {
     "much", "many", "there", "it", "its", "that", "this", "we", "my", "have", "has", "called",
     "just", "like", "um", "uh", "hmm", "now", "actually", "really", "some", "any", "all",
     "should", "need", "needs", "must", "supposed", "ought", "make", "makes", "whens", "wheres",
-    "hows", "whys", "gonna", "wanna",
+    "hows", "whys", "gonna", "wanna", "take", "takes", "once", "after",
 }
 SYNONYMS = {
     "begin": "start", "began": "start", "begins": "start", "started": "start", "starts": "start",
@@ -36,7 +36,8 @@ SYNONYMS = {
     "boiled": "boil", "baking": "bake", "baked": "bake", "defrost": "thaw", "reboot": "restart",
     "hrs": "hours", "hr": "hours", "mins": "minutes", "stay": "last", "keep": "last",
     "replace": "change", "isnt": "not", "arent": "not", "doesnt": "not", "dont": "not",
-    "cant": "not", "wont": "not",
+    "cant": "not", "wont": "not", "opened": "open", "opening": "open", "spaghetti": "pasta",
+    "noodles": "pasta", "detector": "alarm", "detectors": "alarms",
 }
 HOW = ["many", "much", "long", "far", "fast", "old", "big", "tall", "heavy", "hot", "cold",
        "deep", "high", "often", "smart"]
@@ -86,7 +87,7 @@ def _pad4(b):
 
 
 def build(known):
-    """known: [(normalized phrasing, fact index)] -> index bytes (format v3)."""
+    """known: [(normalized phrasing, fact index)] -> index bytes (see the file layout in export.py)."""
     parsed = [(content_words(q), QTYPES.index(qtype(q)), len(q), f, q) for q, f in known]
     vocab = sorted({w for words, *_ in parsed for w in words})
     wid = {w: i for i, w in enumerate(vocab)}

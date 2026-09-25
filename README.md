@@ -42,7 +42,7 @@ curriculum and shrinking every piece down to microcontroller size:
 "Whats the capital of Iceland??"
    │ normalize         lowercase, strip junk            "whats the capital of iceland"
    │ compute           math, money, units, times, dates  not computable
-   │ knowledge gate    indexed match, 8,521 phrasings    fact #1,204
+   │ knowledge gate    indexed match, 8,691 phrasings    fact #1,204
    │                   no match -> "I don't know."
    │ model (int4 GPT)  fact's shortest phrasing -> answer "capital of iceland"
    ▼                   greedy, stops at EOS, 48 chars max
@@ -61,46 +61,59 @@ Directness is enforced at every layer, not just requested in a prompt:
 6. **Knowledge gate** (`gate.c`). A tiny model can't tell what it doesn't know. Ask for a capital it never saw and it will invent one. The gate checks the question against every phrasing the model was trained on. It tolerates typos, plurals, split words ("humming bird") and filler, and it requires the question type to agree: a "how many" question never gets a "what" answer. With no match, the answer is `I don't know.`
 7. **Computed answers** (`calc.c`, `convert.c`, `everyday.c`). Anything that can be calculated is, rather than memorized, and number words work too ("twelve times seven", "half of 30", "a dozen"):
    - math: `12*7`, `15% of 80`, `50 plus 10%` (= 55, like any calculator), `square root of 144`, `average of 3, 5 and 10`
-   - money: `15% tip on 42.50` → `Tip 6.38, total 48.88.`, `20% off 80`, `what percent is 12 of 48`, `split 90 between 4 people`
-   - 63 units: `10 km in miles`, `how many cups in a liter`, `350 f in c`, `32 psi in bar`
-   - times: `3pm in 24 hour time`, `how long from 9am to 5:30pm`
+   - money: `15% tip on 42.50` → `Tip 6.38, total 48.88.`, `8% tax on 50`, `20% off 80`, `what percent is 12 of 48`, `percent change from 50 to 75`, `split 90 between 4 people`
+   - 63 units: `10 km in miles`, `how many pounds is 70 kg`, `350 f in c`, `32 psi in bar`
+   - times: `3pm in 24 hour time`, `how long from 9am to 5:30pm`, `3pm eastern in pacific`, `10:30 utc in jst`
    - dates: `what day was july 20 1969`, `days between march 3 and june 10`, `30 days after march 3 2025`, `is 2100 a leap year`
-   - numbers: `255 in hex`, `1994 in roman numerals`, `is 91 prime` → `No, 91 = 7 x 13.`
+   - health: `bmi 70 kg 175 cm` → `BMI 22.9: healthy weight.`
+   - numbers: `255 in hex`, `1994 in roman numerals`, `is 91 prime` → `No, 91 = 7 x 13.`, `10 factorial`
+   - chance: `flip a coin`, `roll 2 dice`, `random number between 1 and 10` (seeded from the ESP32's hardware RNG)
 
-## Optimizations
+   When a computed answer would depend on something it can't know, it says `I don't know.` instead of guessing. For example, "3pm eastern in UTC" depends on daylight saving, and it has no clock.
 
-Four rounds so far, each measured on the C engine:
+## v2
 
-| | v1 | v2 | v3 | **v4 (now)** |
-|---|---|---|---|---|
-| Facts the model stores | 309 | 1,089 | 2,973 | **3,230** |
-| Accepted phrasings | 639 | 2,415 | 7,796 | **8,521** |
-| Computed questions | arithmetic | arithmetic | + units, bases, Roman numerals, primes | **+ money, tips, percentages, times, dates, number words** |
-| Model file (flash) | 720 KB | 494 KB | 551 KB | **566 KB** |
-| Weights | int8 | int4 + QAT | int4 + QAT | int4 + QAT |
-| Gate time per question (x86) | n/a | 18 ms | 0.25 ms | **0.32 ms** |
-| Matmuls on dual-core chips | 1 core | 1 core | 2 cores | 2 cores |
-| Trained phrasings correct | 97% | 100% | 100% | **100% (8,522/8,522)** |
-| Held-out questions correct | 85% | 100% | 100% (124) | **100% (214/214)** |
-| Everyday questions, natural phrasing | n/a | n/a | 79% (71/90) | **100% (90/90)** |
+v1 was the first build: a small int8 model that tried to answer from raw text. v2 is everything below, measured on the C engine:
 
-**v2: fit more facts per byte**
-- **Retrieval-canonical prompts.** The gate finds the fact, and the model only ever sees that fact's canonical key, never the raw text. Capacity goes to facts instead of typos, and accuracy on the chip matches training.
+| | v1 | **v2** |
+|---|---|---|
+| Facts the model stores | 309 | **3,288** |
+| Accepted phrasings | 639 | **8,691** |
+| Computed questions | arithmetic | **+ money, tax, percentages, units, times, time zones, dates, BMI, bases, primes, dice** |
+| Model file (flash) | 720 KB | **570 KB** |
+| Weights | int8 | **int4 + quantization-aware training** |
+| Knowledge gate | scans every phrasing | **word index, 0.3 ms per question (x86)** |
+| Matmuls on dual-core chips | 1 core | **2 cores** |
+| Trained phrasings correct | 97% | **100% (8,692/8,692)** |
+| Held-out questions correct | 85% (58/68) | **100% (299/299)** |
+
+### Fitting more knowledge in the same chip
+- **Retrieval-canonical prompts.** The gate finds the fact, and the model only ever sees that fact's key, never the raw text. Capacity goes to facts instead of typos, and accuracy on the chip matches training. v1 answered "France capital" with "Beijing."; that class of error is gone.
+- **Shortest phrasing as the key.** On the chip every prompt character is a full forward pass, so each fact's key is its shortest accepted phrasing ("gold melting point", not "what is the melting point of gold"). That's 22% fewer forward passes per answer.
 - **int4 weights with quantization-aware training.** 4.5 bits per weight: one fp32 scale per 32 weights. The second half of training uses the rounded weights through a straight-through estimator, and `export.py` asserts its rounding matches training bit for bit.
 - **Flash bandwidth is the real bottleneck.** Weights stream from memory-mapped flash through a 32 KB cache. The int4 kernel reads 8 weights per 32-bit load and uses unsigned nibbles with a precomputed-sum correction: Σ(w−8)·x = Σw·x − 8·Σx.
 - **Grouped-query attention** halves the K/V projections and the KV cache.
-
-**v3: push more knowledge through the same 616K-parameter model**
-- **Bulk facts from real datasets, not memory.** Every chemical element (symbol, number, mass, melting and boiling points, density, group, period, type, state) comes from [mendeleev](https://github.com/lmmentel/mendeleev) (MIT). Currencies come from Unicode CLDR via Babel (BSD), calling codes from phonenumbers (Apache 2.0), and 20 CODATA physical constants from SciPy (BSD). Data that didn't pass checking is left out. mendeleev's discoverer list has misspellings and wrong entries, so discoverers are hand-curated for 32 well-documented elements, plus 10 known since antiquity. CLDR's official-language data is misleading (South Africa: English only), so languages aren't included.
-- **Computation instead of memorization.** Unit conversion, number bases, Roman numerals and primes cover unlimited questions in about 9 KB of code, and 40 memorized facts became redundant and were removed. What is ambiguous stays with the facts: "ton" could be US or metric, and "ounces in a cup" mixes mass and volume.
-- **An indexed gate.** Phrasings are stored as word IDs into a 1,610-word dictionary, with the question type precomputed. That's 97 KB instead of 312 KB of text. A question fuzzy-matches each of its words against the dictionary once, then scores 7,796 phrasings with integer compares: 18 ms → 0.25 ms on x86, about 70× faster. The index is built in Python at export time, and `evaluate.py` proves it parses all 7,796 phrasings exactly like the C gate.
-- **Shortest phrasing as the model's key.** On the chip every prompt character is a full forward pass, so each fact's key is its shortest accepted phrasing ("gold melting point", not "what is the melting point of gold"). That's 22% fewer forward passes per answer, and it fixed a context overflow on the longest question.
 - **Both cores.** On the ESP32 and ESP32-S3 each matmul is split across the two cores with FreeRTOS task notifications. Output rows are independent, so answers are bit-identical to single-core, which the emulator run confirms.
 
-**v4: smart and reliable for everyday use**
-- **Everyday knowledge.** Safe cooking temperatures (USDA), cooking basics, emergency numbers for 18 countries and the EU, the US poison control and 988 crisis lines, standard first aid (Red Cross / NHS), health reference numbers (CDC / AHA), household safety, money, holidays, daylight saving, and device shortcuts.
-- **Everyday math in code** (`everyday.c`): tips, discounts, percentages, bill splitting, averages, 12/24-hour time, durations across midnight, day of the week, days between dates, date arithmetic, leap years. Number words are understood. "50 plus 10%" means 55. Money rounds correctly (48.875 → 48.88, not the 48.87 floating point gives).
-- **A gate that understands how people ask**, measured on 90 new everyday questions written the way people type them. The first run got 71 right, and only one of the 19 misses was a wrong answer, not an "I don't know". Fixes that generalize: filler words ("should", "need", "make"), contractions ("when's", "isn't"), synonyms (temp→temperature, stay→last, replace→change), and treating "what date" and "when" as the same question. Two relaxations made it *worse* and were reverted. Letting any "how X" question match a "what" question turned "how far is pluto" into "what is pluto". Ignoring the word after "how" made the same question match "is pluto a planet". The final gate refuses all 30 must-refuse questions.
+### Knowledge from real sources
+- **Datasets, not memory.** Every chemical element (symbol, number, mass, melting and boiling points, density, group, period, type, state) comes from [mendeleev](https://github.com/lmmentel/mendeleev) (MIT). Currencies come from Unicode CLDR via Babel (BSD), calling codes from phonenumbers (Apache 2.0), US and Canadian abbreviations from pycountry (LGPL), and 20 CODATA physical constants from SciPy (BSD).
+- **Data that didn't pass checking is left out.** mendeleev's discoverer list has misspellings and wrong entries, so discoverers are hand-curated for 32 well-documented elements, plus 10 known since antiquity. CLDR's official-language data is misleading (South Africa: English only), so languages aren't included.
+- **Everyday knowledge from standard references:**
+  - safe cooking temperatures and food storage times (USDA / FoodSafety.gov)
+  - emergency numbers for 18 countries and the EU, plus US poison control and the 988 crisis line
+  - first aid (Red Cross / NHS)
+  - health reference numbers and daily limits (CDC / AHA / FDA / ADA)
+  - home and car settings (US DOE)
+  - pet toxins, household safety, holidays, daylight saving, and keyboard shortcuts
+
+### Computation instead of memorization
+- About 30 KB of C answers unlimited questions: see the list above. More than 40 memorized facts became redundant and were removed. Ambiguous cases stay with the facts: "ton" could be US or metric, and "ounces in a cup" mixes mass and volume.
+- Number words are understood, "50 plus 10%" means 55, and money rounds correctly (48.875 → 48.88, not the 48.87 floating point gives).
+
+### A gate that understands how people ask
+- **Indexed.** Phrasings are stored as word IDs into a dictionary, with the question type precomputed. That's 110 KB instead of about 350 KB of text. A question fuzzy-matches each of its words against the dictionary once, then scores every phrasing with integer compares: 18 ms → 0.3 ms on x86. The index is built in Python at export time, and `evaluate.py` proves it parses every phrasing exactly like the C gate.
+- **Tuned on real phrasing, then checked on phrasing it had never seen.** 90 everyday questions written the way people type them started at 71 right. The fixes that generalize: filler words ("should", "need", "take"), contractions ("when's", "isn't"), plurals ("emergencies"), synonyms (temp→temperature, detector→alarm), and "what date" = "when". After that, a second batch of 85 questions, written fresh and never used for tuning, scored 75 with **zero wrong answers**. Its misses were all "I don't know". After fixing their general causes, 84 are answered correctly, and "is chicken safe at 165" is still declined rather than guessed.
+- **Measured, not assumed.** Two relaxations made it give *wrong* answers and were reverted. Letting any "how X" question match a "what" question turned "how far is pluto" into "what is pluto". Ignoring the word after "how" made the same question match "is pluto a planet". Every change is re-checked against all trained phrasings and every must-refuse question.
 
 ## Quick start: flash the prebuilt model
 
@@ -153,10 +166,10 @@ python data/more_facts.py > data/facts_generated.tsv
 |---|---|
 | Architecture | GPT: 4 layers, dim 128, 4 query heads / 2 K/V heads, MLP 384, context 96, tied embeddings |
 | Parameters | 615,680 |
-| Knowledge | 3,230 facts, 8,521 accepted phrasings, plus computed answers |
-| Model in flash | 566 KB: int4 weights 364 KB, int8 embeddings 25 KB, fact keys 70 KB, gate index 107 KB |
+| Knowledge | 3,288 facts, 8,691 accepted phrasings, plus computed answers |
+| Model in flash | 570 KB: int4 weights 364 KB, int8 embeddings 25 KB, fact keys 71 KB, gate index 110 KB |
 | RAM at runtime | about 65 KB (int8 KV cache 49 KB, activations, scales and gate buffers about 16 KB) |
-| Engine code | about 36 KB of Xtensa code and tables, pure C99, no dependencies |
+| Engine code | about 41 KB of Xtensa code and tables, pure C99, no dependencies |
 | Works on | ESP32, ESP32-S3, ESP32-C3 |
 
 ## Results
@@ -165,13 +178,13 @@ Scored by `train/evaluate.py`, which runs the real C engine (the same code the E
 
 | Test | Score |
 |---|---|
-| Every trained phrasing | 8,522 / 8,522 |
-| Held-out rephrasings of general facts | 83 / 83 |
+| Every trained phrasing | 8,692 / 8,692 |
+| Held-out questions answered from knowledge | 174 / 174 |
 | ...including traps (Iceland vs Ireland, Guinea vs Guinea-Bissau, Sudan vs South Sudan, Fahrenheit→Celsius vs Celsius→Fahrenheit) | all correct |
-| Everyday questions, phrased the way people type them (29 of them computed) | 80 / 80 |
-| Unknown topics that must be refused ("what time is it in tokyo", "how many calories are in a big mac") | 30 / 30 |
-| Calculator, units, bases, primes | 21 / 21 |
-| Gate index parses like the C gate | 8,521 / 8,521 |
+| Held-out computed questions (math, money, units, times, time zones, dates, BMI) | 87 / 87 |
+| Unknown topics that must be refused ("what time is it in tokyo", "how many calories are in a big mac") | 38 / 38 |
+| Second everyday batch, written after tuning and never tuned on: before fixes | 75 / 85, 0 wrong answers |
+| Gate index parses like the C gate | 8,691 / 8,691 |
 | Answers over 48 chars or starting with filler | 0 |
 
 Speed on a laptop CPU: about 15 ms per model answer, 0.3 ms to refuse, and effectively instant for computed answers.
@@ -182,11 +195,11 @@ Speed on a laptop CPU: about 15 ms per model answer, 0.3 ms to refuse, and effec
 
   | Board | Flash used (of 3 MB app partition) | Static RAM |
   |---|---|---|
-  | ESP32 | 920 KB (29%) | 25.1 KB |
-  | ESP32-S3 | 916 KB (29%) | 22.1 KB |
-  | ESP32-C3 | 901 KB (29%) | 17.4 KB |
+  | ESP32 | 929 KB (30%) | 25.1 KB |
+  | ESP32-S3 | 925 KB (29%) | 22.1 KB |
+  | ESP32-C3 | 910 KB (29%) | 17.4 KB |
 
-- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image, on both cores: it boots with 273 KB of heap free and answers all 214 eval questions plus a random 800 of the trained phrasings exactly as expected (1,014 / 1,014).
+- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image, on both cores: it boots with 273 KB of heap free and answers all 299 eval questions plus a random 700 of the trained phrasings exactly as expected (999 / 999).
 - **Not yet timed on physical hardware.** Emulator timings aren't real. To measure on a board, set `SHOW_TIMING 1` in `firmware/src/main.cpp`.
 
 Re-run the emulator check yourself (needs [Espressif's QEMU](https://github.com/espressif/qemu/releases)):

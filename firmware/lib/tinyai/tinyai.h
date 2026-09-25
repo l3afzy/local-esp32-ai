@@ -97,6 +97,8 @@ int tai_calc(const char *normalized, char *out, int out_len);     // arithmetic 
 int tai_convert(const char *normalized, char *out, int out_len);  // units, bases, primes
 int tai_everyday(const char *normalized, char *out, int out_len); // money, %, times, dates
 void tai_number_words(const char *in, char *out, int out_len);    // "twelve" -> "12"
+// Seed for "flip a coin" / "roll a die" / "random number" (e.g. esp_random()).
+void tai_seed(uint32_t seed);
 // 0 = unknown topic, else 1 + index of the matched fact.
 int tai_gate(const tai_model *m, const char *normalized);
 // "<qtype code> <content words>" as the gate parses `normalized` (for tests).

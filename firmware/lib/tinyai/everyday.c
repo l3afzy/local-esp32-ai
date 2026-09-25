@@ -11,7 +11,13 @@
 //   "how long from 9am to 5:30pm"      -> "8 hours 30 minutes"
 //   "what day was july 20 1969"        -> "Sunday."
 //   "days between march 3 and june 10" -> "99 days"
-//   "30 days after march 3 2025"       -> "April 2, 2025."
+//   "30 days after march 3 2025"       -> "Wednesday, April 2, 2025."
+//   "8% tax on 50"                     -> "Tax 4, total 54."
+//   "percent change from 50 to 75"     -> "+50%"
+//   "3pm eastern in pacific"           -> "12:00 PM"
+//   "bmi 70 kg 175 cm"                 -> "BMI 22.9: healthy weight."
+//   "10 factorial"                     -> "3628800"
+//   "flip a coin"                      -> "Heads."
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -200,9 +206,13 @@ static int skip_prefix(char **tok, int n) {
 
 static int money_question(char **tok, int n, char *out, int out_len) {
     double p = 0, x, y;
-    int has_tip = 0, pct_at = -1, pct_len = 0;
+    int has_tip = 0, has_tax = 0, has_change = 0, pct_at = -1, pct_len = 0;
     for (int i = 0; i < n; i++) {
         if (eq(tok[i], "tip") || eq(tok[i], "tips") || eq(tok[i], "gratuity")) has_tip = 1;
+        if (eq(tok[i], "tax") || eq(tok[i], "vat") || eq(tok[i], "gst")) has_tax = 1;
+        if (eq(tok[i], "change") || eq(tok[i], "increase") || eq(tok[i], "decrease") ||
+            eq(tok[i], "difference"))
+            has_change = 1;
         int l = percent(tok, n, i, &x);
         if (l && pct_at < 0) {
             pct_at = i;
@@ -233,6 +243,24 @@ static int money_question(char **tok, int n, char *out, int out_len) {
             snprintf(out, (size_t)out_len, "15%%: %s, 18%%: %s, 20%%: %s.", a, b, c);
         }
         return 1;
+    }
+
+    if (has_tax && pct_at >= 0 && nn == 1 && nums[0] > 0) {  // "8% tax on 50", "sales tax 7.25% on 19.99"
+        money(a, sizeof a, nums[0] * p / 100);
+        money(b, sizeof b, nums[0] * (1 + p / 100));
+        snprintf(out, (size_t)out_len, "Tax %s, total %s.", a, b);
+        return 1;
+    }
+
+    // "percent change from 50 to 75", "percentage increase from 80 to 100"
+    if (has_change && pct_at < 0 && nn == 2) {
+        int asks_pct = 0;
+        for (int i = 0; i < n; i++) asks_pct |= eq(tok[i], "%") || eq(tok[i], "percentage");
+        if (asks_pct && nums[0] != 0) {
+            plain(a, sizeof a, (nums[1] - nums[0]) / fabs(nums[0]) * 100);
+            snprintf(out, (size_t)out_len, "%s%s%%", nums[1] >= nums[0] ? "+" : "", a);
+            return 1;
+        }
     }
 
     // "20% off 80", "80 with 20% off"
@@ -588,6 +616,158 @@ static int dates_question(char **tok, int n, char *out, int out_len) {
     return 1;
 }
 
+// ---------------------------------------------------------------- time zones
+
+typedef struct {
+    const char *name;
+    int offset;  // minutes from UTC
+    int us;      // generic US zone ("eastern"): offset is standard time
+} zone;
+
+static const zone ZONES[] = {
+    {"utc", 0, 0}, {"gmt", 0, 0}, {"est", -300, 0}, {"edt", -240, 0}, {"cst", -360, 0},
+    {"cdt", -300, 0}, {"mst", -420, 0}, {"mdt", -360, 0}, {"pst", -480, 0}, {"pdt", -420, 0},
+    {"akst", -540, 0}, {"akdt", -480, 0}, {"hst", -600, 0}, {"bst", 60, 0}, {"cet", 60, 0},
+    {"cest", 120, 0}, {"eet", 120, 0}, {"eest", 180, 0}, {"msk", 180, 0}, {"ist", 330, 0},
+    {"sgt", 480, 0}, {"hkt", 480, 0}, {"jst", 540, 0}, {"kst", 540, 0}, {"awst", 480, 0},
+    {"aest", 600, 0}, {"aedt", 660, 0}, {"nzst", 720, 0}, {"nzdt", 780, 0},
+    {"eastern", -300, 1}, {"et", -300, 1}, {"central", -360, 1}, {"ct", -360, 1},
+    {"mountain", -420, 1}, {"mt", -420, 1}, {"pacific", -480, 1}, {"pt", -480, 1},
+};
+
+static const zone *find_zone(const char *t) {
+    for (size_t i = 0; i < sizeof ZONES / sizeof *ZONES; i++)
+        if (eq(t, ZONES[i].name)) return &ZONES[i];
+    return NULL;
+}
+
+// "3pm est in pst", "what is 10:30 utc in jst", "noon eastern to pacific time".
+// Generic US zones ("eastern") only convert to each other: their difference
+// never changes, but their offset from UTC does with daylight saving.
+static int zone_question(char **tok, int n, char *out, int out_len) {
+    int i = skip_prefix(tok, n), t, ampm;
+    int l = parse_time(tok, n, i, &t, &ampm, 0);
+    if (!l) return 0;
+    i += l;
+    const zone *a = i < n ? find_zone(tok[i]) : NULL;
+    if (!a) return 0;
+    i++;
+    if (i < n && eq(tok[i], "time")) i++;
+    if (!(i < n && (eq(tok[i], "in") || eq(tok[i], "to") || eq(tok[i], "into")))) return 0;
+    i++;
+    const zone *b = i < n ? find_zone(tok[i]) : NULL;
+    if (!b) return 0;
+    i++;
+    if (i < n && eq(tok[i], "time")) i++;
+    if (i != n || a->us != b->us) return 0;
+    int m = t + b->offset - a->offset, day = 0;
+    while (m < 0) m += 1440, day--;
+    while (m >= 1440) m -= 1440, day++;
+    char buf[16];
+    if (ampm) fmt_12h(buf, sizeof buf, m);
+    else snprintf(buf, sizeof buf, "%02d:%02d", m / 60, m % 60);
+    snprintf(out, (size_t)out_len, "%s%s", buf, day > 0 ? ", next day" : day < 0 ? ", previous day" : "");
+    return 1;
+}
+
+// ---------------------------------------------------------------- health, math, chance
+
+// "bmi 70 kg 175 cm", "what is my bmi 150 pounds 5'9", "bmi for 180 lbs and 6 feet"
+static int bmi_question(char **tok, int n, char *out, int out_len) {
+    int asks = 0;
+    for (int i = 0; i < n; i++) asks |= eq(tok[i], "bmi");
+    if (!asks) return 0;
+    double kg = 0, m = 0, v, v2;
+    for (int i = 0; i < n; i++) {
+        const char *u = i + 1 < n ? tok[i + 1] : "";
+        int f, in;
+        if (sscanf(tok[i], "%d'%d", &f, &in) == 2 && f > 0) {  // 5'9
+            m = (f * 12 + in) * 0.0254;
+            continue;
+        }
+        if (!num(tok[i], &v)) continue;
+        if (eq(u, "kg") || eq(u, "kgs") || eq(u, "kilograms") || eq(u, "kilos")) kg = v;
+        else if (eq(u, "lb") || eq(u, "lbs") || eq(u, "pounds")) kg = v * 0.45359237;
+        else if (eq(u, "cm") || eq(u, "centimeters")) m = v / 100;
+        else if (eq(u, "m") || eq(u, "meters") || eq(u, "metres")) m = v;
+        else if (eq(u, "feet") || eq(u, "foot") || eq(u, "ft")) {
+            m = v * 0.3048;
+            if (i + 2 < n && num(tok[i + 2], &v2)) m += v2 * 0.0254;  // "5 feet 9"
+        }
+    }
+    if (kg <= 0 || m <= 0.5 || m > 2.8) return 0;
+    double bmi = kg / (m * m);
+    const char *cat = bmi < 18.5 ? "underweight" : bmi < 25 ? "healthy weight" : bmi < 30 ? "overweight" : "obese";
+    snprintf(out, (size_t)out_len, "BMI %.1f: %s.", bmi, cat);
+    return 1;
+}
+
+// "10 factorial", "factorial of 5"
+static int factorial_question(char **tok, int n, char *out, int out_len) {
+    int i = skip_prefix(tok, n);
+    double v;
+    int ok = (i + 2 == n && num(tok[i], &v) && eq(tok[i + 1], "factorial")) ||
+             (i + 3 == n && eq(tok[i], "factorial") && eq(tok[i + 1], "of") && num(tok[i + 2], &v));
+    if (!ok) return 0;
+    if (v < 0 || v != floor(v) || v > 170) return 0;
+    double f = 1;
+    for (int k = 2; k <= (int)v; k++) f *= k;
+    if (v <= 20) snprintf(out, (size_t)out_len, "%.0f", f);  // exact up to 20!
+    else snprintf(out, (size_t)out_len, "%.6g", f);
+    return 1;
+}
+
+static uint32_t rng_state = 2463534242u;
+void tai_seed(uint32_t seed) { rng_state = seed ? seed : 2463534242u; }
+
+static uint32_t rnd(uint32_t n) {  // xorshift32, 0..n-1
+    rng_state ^= rng_state << 13;
+    rng_state ^= rng_state >> 17;
+    rng_state ^= rng_state << 5;
+    return (uint32_t)(((uint64_t)rng_state * n) >> 32);
+}
+
+// "flip a coin", "roll a die", "roll 2 dice", "roll a d20", "random number between 1 and 10"
+static int chance_question(char **tok, int n, char *out, int out_len) {
+    double a, b;
+    if (n >= 2 && (eq(tok[0], "flip") || eq(tok[0], "toss")) && (eq(tok[n - 1], "coin"))) {
+        snprintf(out, (size_t)out_len, "%s", rnd(2) ? "Heads." : "Tails.");
+        return 1;
+    }
+    if (n >= 2 && eq(tok[0], "roll")) {
+        int count = 1, sides = 6;
+        const char *d = tok[n - 1];
+        if (d[0] == 'd' && d[1] >= '1' && d[1] <= '9') sides = atoi(d + 1);
+        else if (!(eq(d, "die") || eq(d, "dice"))) return 0;
+        if (n >= 3 && num(tok[1], &a) && a >= 1 && a <= 6 && a == floor(a)) count = (int)a;
+        if (sides < 2 || sides > 1000) return 0;
+        int o = 0, total = 0;
+        for (int k = 0; k < count; k++) {
+            int r = 1 + (int)rnd((uint32_t)sides);
+            total += r;
+            o += snprintf(out + o, (size_t)(out_len - o), "%s%d", k ? (k == count - 1 ? " and " : ", ") : "", r);
+        }
+        if (count > 1) snprintf(out + o, (size_t)(out_len - o), " (%d).", total);
+        else snprintf(out + o, (size_t)(out_len - o), ".");
+        return 1;
+    }
+    int asks = 0, lo = -1;
+    for (int i = 0; i < n; i++) {
+        asks |= eq(tok[i], "random") || (eq(tok[i], "pick") && i + 1 < n && eq(tok[i + 1], "a"));
+        if ((eq(tok[i], "between") || eq(tok[i], "from")) && i + 3 < n && num(tok[i + 1], &a) &&
+            (eq(tok[i + 2], "and") || eq(tok[i + 2], "to")) && num(tok[i + 3], &b))
+            lo = i;
+    }
+    if (!asks || lo < 0 || a != floor(a) || b != floor(b) || b - a > 1e9) return 0;
+    if (a > b) {
+        double t = a;
+        a = b;
+        b = t;
+    }
+    snprintf(out, (size_t)out_len, "%.0f.", a + rnd((uint32_t)(b - a + 1)));
+    return 1;
+}
+
 // Returns 1 and writes the answer if `norm` (number words already rewritten)
 // is an everyday computable question.
 int tai_everyday(const char *norm, char *out, int out_len) {
@@ -600,6 +780,8 @@ int tai_everyday(const char *norm, char *out, int out_len) {
     for (int i = 0; i < n; i++)
         if (!is_currency(tok[i])) tok[k++] = tok[i];
     n = k;
-    return dates_question(tok, n, out, out_len) || time_question(tok, n, out, out_len) ||
+    return dates_question(tok, n, out, out_len) || zone_question(tok, n, out, out_len) ||
+           time_question(tok, n, out, out_len) || bmi_question(tok, n, out, out_len) ||
+           factorial_question(tok, n, out, out_len) || chance_question(tok, n, out, out_len) ||
            money_question(tok, n, out, out_len);
 }

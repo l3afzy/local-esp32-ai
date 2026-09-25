@@ -6,7 +6,7 @@ Writes:
     firmware/data/model.bin        raw model (host build loads this)
     firmware/src/model_data.h      same bytes as a C array (flashed with the firmware)
 
-Format v3 (little endian, every block padded to 4 bytes):
+File layout, version 3 (little endian, every block padded to 4 bytes):
     u32 magic "TAI1", version 3, vocab, ctx, dim, layers, heads, kv_heads,
         hidden, n_facts, n_known
     tok, pos      int8 [rows*cols] + f32 [rows] scales

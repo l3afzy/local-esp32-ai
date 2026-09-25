@@ -27,7 +27,7 @@ static const char *const STOP[] = {
     "much", "many", "there", "it", "its", "that", "this", "we", "my", "have", "has", "called",
     "just", "like", "um", "uh", "hmm", "now", "actually", "really", "some", "any", "all",
     "should", "need", "needs", "must", "supposed", "ought", "make", "makes", "whens", "wheres",
-    "hows", "whys", "gonna", "wanna",
+    "hows", "whys", "gonna", "wanna", "take", "takes", "once", "after",
 };
 
 // Words that add context but never change which fact is meant
@@ -39,6 +39,7 @@ static const char *const SOFT[] = {
     "average", "normal", "typical", "usually", "generally", "name", "thing", "kind", "type",
     "exact", "approx", "approximate", "grown", "adult", "full", "whole", "known",
     "today", "tomorrow", "tonight", "currently", "right", "app", "application", "program",
+    "treatment", "treat", "min", "minimum", "recommended",
 };
 
 // Same meaning, one spelling.
@@ -51,7 +52,8 @@ static const char *const SYNONYMS[][2] = {
     {"baking", "bake"}, {"baked", "bake"}, {"defrost", "thaw"}, {"reboot", "restart"},
     {"hrs", "hours"}, {"hr", "hours"}, {"mins", "minutes"}, {"stay", "last"}, {"keep", "last"},
     {"replace", "change"}, {"isnt", "not"}, {"arent", "not"}, {"doesnt", "not"}, {"dont", "not"},
-    {"cant", "not"}, {"wont", "not"},
+    {"cant", "not"}, {"wont", "not"}, {"opened", "open"}, {"opening", "open"},
+    {"spaghetti", "pasta"}, {"noodles", "pasta"}, {"detector", "alarm"}, {"detectors", "alarms"},
 };
 
 static int in_list(const char *w, const char *const *list, size_t n) {
@@ -118,6 +120,14 @@ static int word_match(const char *a, const char *b) {
         // to each other for typo tolerance (bake/cake/take).
         return (la == lb + 1 && a[la - 1] == 's' && !strncmp(a, b, (size_t)lb)) ||
                (lb == la + 1 && b[lb - 1] == 's' && !strncmp(a, b, (size_t)la));
+    }
+    // emergencies/emergency, batteries/battery
+    if (la >= 5 && lb >= 5 && la != lb) {
+        const char *ies = la > lb ? a : b, *y = la > lb ? b : a;
+        size_t li = strlen(ies), ly = strlen(y);
+        if (li == ly + 2 && !strcmp(ies + li - 3, "ies") && y[ly - 1] == 'y' &&
+            !strncmp(ies, y, ly - 1))
+            return 1;
     }
     int d = edit_distance(a, b);
     return d <= (shorter >= 8 ? 2 : 1);
@@ -317,7 +327,9 @@ int tai_gate(const tai_model *m, const char *norm) {
             }
             if (2 * b_matched < nk || (cross && b_matched < nk)) continue;
             int d = abs(len - m->known_len[p]);
-            score = 1000L * (a_quality + b_quality - 2 * (nk - b_matched) - 3 * cross) +
+            // A known word the question never mentions costs more than a typo:
+            // that phrasing asks something more specific ("... batteries").
+            score = 1000L * (a_quality + b_quality - 3 * (nk - b_matched) - 3 * cross) +
                     60L * in_order + (d > 59 ? 0 : 59 - d);
         }
         if (score > best_score) {

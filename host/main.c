@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
 
     tai_model m;
     int rc = tai_load(&m, blob, (size_t)n);
+    tai_seed((uint32_t)time(NULL));
     if (rc) {
         fprintf(stderr, "load failed: %d\n", rc);
         return 1;

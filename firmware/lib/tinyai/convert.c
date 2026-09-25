@@ -214,15 +214,16 @@ static int units_question(char **tok, int n, char *out, int out_len) {
     int i;
     const unit *a, *b;
     double qty;
-    // "how many <unit> [are|is] [there] in [qty] <unit>"
+    // "how many <unit> [are|is] [there] in [qty] <unit>", "how many <unit> is <qty> <unit>"
     if (n >= 4 && !strcmp(tok[0], "how") && !strcmp(tok[1], "many")) {
         int ub = find_unit(tok, n, 2, &b);
         if (!ub) return 0;
         i = 2 + ub;
-        if (i < n && (!strcmp(tok[i], "are") || !strcmp(tok[i], "is"))) i++;
+        int verb = i < n && (!strcmp(tok[i], "are") || !strcmp(tok[i], "is"));
+        i += verb;
         if (i < n && !strcmp(tok[i], "there")) i++;
         if (i < n && (!strcmp(tok[i], "in") || !strcmp(tok[i], "per"))) i++;
-        else return 0;
+        else if (!verb) return 0;  // "how many pounds is 70 kg" needs no "in"
         qty = 1;
         if (i < n && parse_number(tok[i], &qty)) i++;
         int ua = find_unit(tok, n, i, &a);

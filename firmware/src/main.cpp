@@ -51,6 +51,7 @@ void setup() {
         Serial.printf("model load failed (%d)\n", rc);
         for (;;) delay(1000);
     }
+    tai_seed(esp_random());  // hardware RNG, for coin flips and dice
     int cores = 1;
 #if !CONFIG_FREERTOS_UNICORE
     // the loop task runs on ARDUINO_RUNNING_CORE; put the worker on the other

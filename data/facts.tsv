@@ -474,7 +474,6 @@ how many zeros are in a trillion|how many zeros in a trillion	12.
 what is a googol|how big is a googol	10 to the power of 100.
 what is the golden ratio|what is phi	1.618.
 what is euler's number|what is the number e	2.71828.
-what is 0 factorial|what is zero factorial	1.
 how many degrees are in a right angle|how many degrees in a right angle	90.
 what is the area of a circle|area of a circle formula	pi x r^2.
 what is the circumference of a circle|circumference of a circle formula	2 x pi x r.
@@ -611,7 +610,7 @@ are you chatgpt|are you claude	No. I'm a tiny offline model on an ESP32.
 
 # ---- everyday: food safety (USDA safe minimum internal temperatures)
 what temperature should chicken be cooked to|how hot should chicken be|safe temperature for chicken|chicken internal temperature|what temp is chicken done|how hot should chicken be inside|safe temp for chicken	165 F (74 C).
-what temperature should turkey be cooked to|how hot should turkey be|safe temperature for turkey|turkey internal temperature|what temp is turkey done	165 F (74 C).
+what temperature should turkey be cooked to|what temperature should ground turkey be cooked to|ground turkey internal temperature|safe temperature for ground turkey|how hot should turkey be|safe temperature for turkey|turkey internal temperature|what temp is turkey done	165 F (74 C).
 what temperature should ground beef be cooked to|how hot should ground beef be|how hot should a burger be|safe temperature for ground beef|hamburger internal temperature|what temp is a burger done|burger internal temperature	160 F (71 C).
 what temperature should pork be cooked to|how hot should pork be|safe temperature for pork|pork internal temperature|what temp is pork done	145 F (63 C), then rest 3 minutes.
 what temperature should steak be cooked to|how hot should steak be|safe temperature for steak|steak internal temperature|safe temperature for beef	145 F (63 C), then rest 3 minutes.
@@ -689,7 +688,7 @@ can i mix bleach and ammonia|is it safe to mix bleach and ammonia|bleach and amm
 can i mix bleach and vinegar|is it safe to mix bleach and vinegar|bleach and vinegar	No. It releases toxic chlorine gas.
 how often should i change smoke detector batteries|how often to replace smoke alarm batteries|how often should i replace smoke alarm batteries|when to change smoke alarm batteries|smoke detector battery	At least once a year.
 how often should i replace smoke detectors|how long do smoke detectors last|when to replace smoke alarms	Every 10 years.
-how often should i change my air filter|how often to change hvac filter|furnace filter how often	Every 1 to 3 months.
+how often should i change my air filter|how often to change a furnace filter|how often to change hvac filter|furnace filter how often	Every 1 to 3 months.
 how do i restart my router|how to reset my wifi router|how to reboot a router|my wifi is not working	Unplug it for 30 seconds, then plug it back in.
 # ---- everyday: money
 how many cents are in a dollar|cents in a dollar|how many pennies are in a dollar	100.
@@ -725,7 +724,7 @@ what is the shortest day of the year|shortest day of the year	About December 21,
 what is a leap year|why do we have leap years	A year with 366 days, to keep up with the sun.
 how often is a leap year|how often do leap years happen	Every 4 years, skipping most century years.
 # ---- everyday: devices
-how do i take a screenshot on windows|screenshot on windows|windows screenshot shortcut	Windows + Shift + S.
+how do i take a screenshot on windows|screenshot on windows 11|screenshot on windows 10|screenshot on windows|windows screenshot shortcut	Windows + Shift + S.
 how do i take a screenshot on a mac|screenshot on mac|mac screenshot shortcut	Cmd + Shift + 4 (or 3 for full screen).
 how do i take a screenshot on an iphone|screenshot on iphone|iphone screenshot	Press the side button and volume up.
 how do i take a screenshot on android|screenshot on android|android screenshot	Press power and volume down together.
@@ -733,3 +732,70 @@ how do i copy and paste|copy paste shortcut|keyboard shortcut to copy	Ctrl+C, th
 how do i undo|undo shortcut|keyboard shortcut to undo	Ctrl+Z (Cmd+Z on a Mac).
 how do i force quit on a mac|force quit mac shortcut	Cmd + Option + Esc.
 how do i open task manager|task manager shortcut|how to force close a program on windows	Ctrl + Shift + Esc.
+
+# ---- everyday: food storage (FoodSafety.gov / USDA)
+how long does cooked chicken last in the fridge|how long is cooked chicken good for|cooked chicken in the fridge	3 to 4 days.
+how long does raw chicken last in the fridge|how long is raw chicken good for|raw chicken in the fridge	1 to 2 days.
+how long does ground beef last in the fridge|how long is raw ground beef good for|raw ground beef in the fridge	1 to 2 days.
+how long does cooked rice last in the fridge|how long is cooked rice good for|cooked rice in the fridge	3 to 4 days.
+can you refreeze thawed meat|is it safe to refreeze meat|can i refreeze thawed chicken	Yes, if it was thawed in the fridge.
+how long to boil water to make it safe|how long to boil water for drinking|boil water advisory how long	1 minute at a rolling boil.
+# ---- everyday: more cooking
+how long to bake cookies|how long do cookies bake|cookie baking time	8 to 12 minutes at 350 F (175 C).
+how long to bake a potato|how long to bake potatoes|baked potato time	About 1 hour at 400 F (200 C).
+how long to boil corn on the cob|how long to boil corn|corn on the cob time	3 to 5 minutes.
+how long to steam broccoli|broccoli steaming time|how long to cook broccoli	4 to 5 minutes.
+how long to cook bacon in the oven|oven bacon time|how long to bake bacon	15 to 20 minutes at 400 F (200 C).
+how long to grill burgers|how long to cook burgers on the grill|burger grilling time	About 4 to 5 minutes per side.
+how much does a gallon of water weigh|weight of a gallon of water|gallon of water weight	About 8.34 pounds (3.79 kg).
+how much does a liter of water weigh|weight of a liter of water|liter of water weight	1 kg.
+# ---- everyday: daily health guidelines
+how much protein do i need a day|how much protein per day|daily protein requirement	About 0.8 g per kg of body weight.
+how many calories should a woman eat a day|daily calories for women	About 1,600 to 2,400.
+how many calories should a man eat a day|daily calories for men	About 2,000 to 3,000.
+how much fiber should i eat a day|daily fiber intake|how much fiber per day	25 to 38 grams.
+how much caffeine is safe per day|daily caffeine limit|how much caffeine is too much	Up to 400 mg for most adults.
+how much sugar should i eat a day|daily sugar limit|how much added sugar per day	Under 25 g for women, 36 g for men.
+how much sodium should i eat a day|daily sodium limit|how much salt per day	Under 2,300 mg of sodium.
+how much exercise do i need a week|how much exercise per week|weekly exercise recommendation	150 minutes of moderate activity.
+how long should i brush my teeth|how long to brush teeth|how long should you brush your teeth	2 minutes, twice a day.
+how often should i replace my toothbrush|when to replace a toothbrush|how often to change toothbrush	Every 3 to 4 months.
+what is a normal oxygen level|normal oxygen saturation|normal spo2	95 to 100 percent.
+what is a normal breathing rate|normal respiratory rate|how many breaths per minute is normal	12 to 20 breaths per minute.
+# ---- everyday: emergencies
+what do i do in an earthquake|what to do during an earthquake|earthquake safety	Drop, cover and hold on.
+what do i do if i smell gas|what to do if you smell gas|i smell gas	Leave now, then call for help from outside.
+what are the signs of a stroke|how to tell if someone is having a stroke|stroke symptoms	BE FAST: balance, eyes, face, arm, speech, time.
+what are the signs of a heart attack|heart attack symptoms|how do i know if im having a heart attack	Chest pain or pressure, shortness of breath.
+what do i do if there is a fire|what to do in a house fire|fire safety	Get out, stay out, call emergency services.
+# ---- everyday: home and car
+what should i set my thermostat to in winter|best thermostat temperature in winter|winter thermostat setting	68 F (20 C) while awake.
+what should i set my thermostat to in summer|best thermostat temperature in summer|summer thermostat setting	78 F (26 C) while home.
+what temperature should my water heater be|water heater temperature|hot water heater setting	120 F (49 C).
+what should my tire pressure be|normal tire pressure|what psi should my tires be	Usually 30 to 35 psi; check the door sticker.
+how often should i rotate my tires|how often to rotate tires|tire rotation interval	Every 5,000 to 7,500 miles.
+how often should i wash my sheets|how often to wash bed sheets|how often to change sheets	Every 1 to 2 weeks.
+how often should i wash my towels|how often to wash bath towels	After 3 to 4 uses.
+what size is a sheet of paper|standard paper size|what size is printer paper	Letter 8.5 x 11 in; A4 210 x 297 mm.
+how many hours is full time|how many hours is a full time job|full time hours per week	40 hours a week in the US.
+how many work days are in a year|working days in a year|how many business days in a year	About 260.
+how many weeks are in a month|weeks in a month	About 4.35.
+# ---- everyday: pets
+can dogs eat grapes|are grapes bad for dogs|are grapes toxic to dogs	No. Grapes are toxic to dogs.
+can dogs eat onions|are onions bad for dogs	No. Onions are toxic to dogs.
+can dogs eat xylitol|is xylitol bad for dogs	No. Xylitol is very toxic to dogs.
+can cats eat chocolate|is chocolate bad for cats	No. It is toxic to cats.
+are lilies toxic to cats|are lilies bad for cats	Yes. Lilies can be deadly to cats.
+what is a normal dog temperature|dog body temperature|normal temperature for a dog	101 to 102.5 F (38.3 to 39.2 C).
+# ---- everyday: more shortcuts
+how do i select all|select all shortcut	Ctrl+A (Cmd+A on a Mac).
+how do i save|save shortcut|keyboard shortcut to save	Ctrl+S (Cmd+S on a Mac).
+how do i find a word on a page|find shortcut|search on a page shortcut	Ctrl+F (Cmd+F on a Mac).
+how do i reopen a closed tab|reopen closed tab shortcut|undo close tab	Ctrl+Shift+T (Cmd+Shift+T on a Mac).
+how do i open a new tab|new tab shortcut	Ctrl+T (Cmd+T on a Mac).
+how do i lock my computer|lock screen shortcut windows|how to lock windows	Windows + L.
+how do i switch between windows|switch apps shortcut|alt tab	Alt+Tab (Cmd+Tab on a Mac).
+how do i refresh a page|refresh shortcut|reload page shortcut	F5 or Ctrl+R (Cmd+R on a Mac).
+how do i print|print shortcut|keyboard shortcut to print	Ctrl+P (Cmd+P on a Mac).
+how do i redo|redo shortcut|keyboard shortcut to redo	Ctrl+Y (Cmd+Shift+Z on a Mac).
+how do i paste without formatting|paste as plain text shortcut	Ctrl+Shift+V (Cmd+Shift+Option+V on a Mac).
