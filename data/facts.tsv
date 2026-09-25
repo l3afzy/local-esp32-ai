@@ -272,7 +272,7 @@ how many cores does the esp32 have|how many cores does an esp32 have	2.
 what voltage does the esp32 use|what voltage does an esp32 run on	3.3 V.
 how much flash does an esp32 have|how much storage does the esp32 have	Usually 4 MB.
 what are you|who are you|what is your name	A tiny language model running on an ESP32.
-how big are you|how many parameters do you have	About 1.2 million parameters.
+how big are you|how many parameters do you have	About 616,000 parameters.
 are you connected to the internet|do you use the internet	No. I run fully offline.
 what is ai|what is artificial intelligence	Software doing tasks that need intelligence.
 what is machine learning|define machine learning	Computers learning patterns from data.
@@ -649,7 +649,7 @@ good night|night	Good night.
 what time is it|what is the time	I have no clock.
 what is today's date|what day is it today	I have no calendar.
 what is the weather|what is the weather like	I have no weather data.
-are you smart|how smart are you	I know about 900 facts. That's it.
+are you smart|how smart are you	I know about 1,100 facts. That's it.
 how do you work|how does this work	A tiny transformer with int4 weights.
 what language do you speak|do you speak english	English.
 can you learn|do you learn	Only by retraining on new facts.
