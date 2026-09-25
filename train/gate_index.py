@@ -25,11 +25,18 @@ STOP = {
     "yo", "ok", "so", "exactly", "roughly", "approximately", "about", "again", "quickly",
     "much", "many", "there", "it", "its", "that", "this", "we", "my", "have", "has", "called",
     "just", "like", "um", "uh", "hmm", "now", "actually", "really", "some", "any", "all",
+    "should", "need", "needs", "must", "supposed", "ought", "make", "makes", "whens", "wheres",
+    "hows", "whys", "gonna", "wanna",
 }
 SYNONYMS = {
     "begin": "start", "began": "start", "begins": "start", "started": "start", "starts": "start",
     "ended": "end", "ends": "end", "finish": "end", "finished": "end", "biggest": "largest",
-    "quickest": "fastest",
+    "quickest": "fastest", "temp": "temperature", "temps": "temperature",
+    "refrigerator": "fridge", "cooking": "cook", "cooked": "cook", "boiling": "boil",
+    "boiled": "boil", "baking": "bake", "baked": "bake", "defrost": "thaw", "reboot": "restart",
+    "hrs": "hours", "hr": "hours", "mins": "minutes", "stay": "last", "keep": "last",
+    "replace": "change", "isnt": "not", "arent": "not", "doesnt": "not", "dont": "not",
+    "cant": "not", "wont": "not",
 }
 HOW = ["many", "much", "long", "far", "fast", "old", "big", "tall", "heavy", "hot", "cold",
        "deep", "high", "often", "smart"]
@@ -67,9 +74,9 @@ def qtype(s):
             return "what"
         if w in ("who", "whos", "whose"):
             return "who"
-        if w in ("when", "where", "why"):
-            return w
-        if w == "how":
+        if w in ("when", "where", "why", "whens", "wheres", "whys"):
+            return w.rstrip("s") if w != "whys" else "why"
+        if w in ("how", "hows"):
             return f"how {nxt}" if nxt in HOW else "how"
     return ""
 

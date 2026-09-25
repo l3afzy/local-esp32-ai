@@ -7,7 +7,7 @@ import glob
 # 2..96 are printable ASCII 32..126.
 EOS, SEP = 0, 1
 VOCAB_SIZE = 2 + 95
-PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=")
+PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=:")
 MAX_Q = 64  # question chars kept (the tail, if longer)
 MAX_A = 48  # answer chars, hard cap: short answers are the point
 FACT_FILES = "data/facts*.tsv"

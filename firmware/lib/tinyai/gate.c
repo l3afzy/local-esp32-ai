@@ -26,6 +26,8 @@ static const char *const STOP[] = {
     "yo", "ok", "so", "exactly", "roughly", "approximately", "about", "again", "quickly",
     "much", "many", "there", "it", "its", "that", "this", "we", "my", "have", "has", "called",
     "just", "like", "um", "uh", "hmm", "now", "actually", "really", "some", "any", "all",
+    "should", "need", "needs", "must", "supposed", "ought", "make", "makes", "whens", "wheres",
+    "hows", "whys", "gonna", "wanna",
 };
 
 // Words that add context but never change which fact is meant
@@ -36,7 +38,7 @@ static const char *const SOFT[] = {
     "woman", "person", "people", "human", "solar", "system", "away", "number", "total",
     "average", "normal", "typical", "usually", "generally", "name", "thing", "kind", "type",
     "exact", "approx", "approximate", "grown", "adult", "full", "whole", "known",
-    "today", "tomorrow", "tonight", "currently", "right",
+    "today", "tomorrow", "tonight", "currently", "right", "app", "application", "program",
 };
 
 // Same meaning, one spelling.
@@ -44,6 +46,12 @@ static const char *const SYNONYMS[][2] = {
     {"begin", "start"}, {"began", "start"}, {"begins", "start"}, {"started", "start"},
     {"starts", "start"}, {"ended", "end"}, {"ends", "end"}, {"finish", "end"},
     {"finished", "end"}, {"biggest", "largest"}, {"quickest", "fastest"},
+    {"temp", "temperature"}, {"temps", "temperature"}, {"refrigerator", "fridge"},
+    {"cooking", "cook"}, {"cooked", "cook"}, {"boiling", "boil"}, {"boiled", "boil"},
+    {"baking", "bake"}, {"baked", "bake"}, {"defrost", "thaw"}, {"reboot", "restart"},
+    {"hrs", "hours"}, {"hr", "hours"}, {"mins", "minutes"}, {"stay", "last"}, {"keep", "last"},
+    {"replace", "change"}, {"isnt", "not"}, {"arent", "not"}, {"doesnt", "not"}, {"dont", "not"},
+    {"cant", "not"}, {"wont", "not"},
 };
 
 static int in_list(const char *w, const char *const *list, size_t n) {
@@ -177,10 +185,10 @@ static int qtype(const char *s) {
         if ((!strcmp(w, "what") || !strcmp(w, "which")) && next_year) return 3;  // "what year" asks when
         if (!strcmp(w, "what") || !strcmp(w, "whats") || !strcmp(w, "which")) return 1;
         if (!strcmp(w, "who") || !strcmp(w, "whos") || !strcmp(w, "whose")) return 2;
-        if (!strcmp(w, "when")) return 3;
-        if (!strcmp(w, "where")) return 4;
-        if (!strcmp(w, "why")) return 5;
-        if (!strcmp(w, "how")) {
+        if (!strcmp(w, "when") || !strcmp(w, "whens")) return 3;
+        if (!strcmp(w, "where") || !strcmp(w, "wheres")) return 4;
+        if (!strcmp(w, "why") || !strcmp(w, "whys")) return 5;
+        if (!strcmp(w, "how") || !strcmp(w, "hows")) {
             for (int i = 0; i < (int)(sizeof HOW / sizeof *HOW); i++) {
                 size_t n = strlen(HOW[i]);
                 if (!strncmp(s, HOW[i], n) && (s[n] == ' ' || s[n] == 0)) return 7 + i;
@@ -190,6 +198,12 @@ static int qtype(const char *s) {
     }
     return 0;
 }
+
+// "what date is X" and "when is X" ask the same thing. That is the only
+// cross-type pair: "how far is pluto" must never match "what is pluto". A
+// cross-type match must cover every word of the known phrasing, and loses to
+// any same-type match.
+static int compatible(int a, int b) { return (a == 1 && b == 3) || (a == 3 && b == 1); }
 
 // Character-bigram overlap (Dice coefficient) of two strings, 0..1000.
 static int dice(const char *a, const char *b) {
@@ -246,12 +260,13 @@ int tai_gate(const tai_model *m, const char *norm) {
             talk += strlen(talk) + 1;
         }
         int tk = m->known_qtype[p];
-        if (tin && tk && tin != tk) continue;
+        int cross = tin && tk && tin != tk;
+        if (cross && !compatible(tin, tk)) continue;
         long score;
         if (n == 0 || nk == 0) {
             // Small talk ("hi", "how are you"): nothing to fact-check, so
             // match the whole phrase instead.
-            if (n != nk) continue;
+            if (n != nk || cross) continue;
             int d = dice(norm, text);
             if (d < 500) continue;
             score = d;
@@ -300,10 +315,10 @@ int tai_gate(const tai_model *m, const char *norm) {
                     b_quality += f;
                 }
             }
-            if (2 * b_matched < nk) continue;
+            if (2 * b_matched < nk || (cross && b_matched < nk)) continue;
             int d = abs(len - m->known_len[p]);
-            score = 1000L * (a_quality + b_quality - 2 * (nk - b_matched)) + 60L * in_order +
-                    (d > 59 ? 0 : 59 - d);
+            score = 1000L * (a_quality + b_quality - 2 * (nk - b_matched) - 3 * cross) +
+                    60L * in_order + (d > 59 ? 0 : 59 - d);
         }
         if (score > best_score) {
             best_score = score;

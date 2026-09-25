@@ -9,6 +9,7 @@
 typedef struct {
     const char *p;
     int err;
+    int pct;  // the last number read had a % sign
 } parser;
 
 static void skip(parser *ps) {
@@ -64,6 +65,7 @@ static double atom(parser *ps) {
     if (*ps->p == '%') {
         ps->p++;
         v /= 100;
+        ps->pct = 1;
     }
     return v;
 }
@@ -78,12 +80,16 @@ static double power(parser *ps) {
     return v;
 }
 
-static double term(parser *ps) {
+// *is_pct: the term is a bare percentage ("10%"), not "10% * 80".
+static double term(parser *ps, int *is_pct) {
+    ps->pct = 0;
     double v = power(ps);
+    *is_pct = ps->pct;
     for (;;) {
         skip(ps);
         char op = *ps->p;
         if (op != '*' && op != '/') return v;
+        *is_pct = 0;
         ps->p++;
         double r = power(ps);
         if (op == '*') v *= r;
@@ -92,14 +98,17 @@ static double term(parser *ps) {
     }
 }
 
+// "50 + 10%" means 55, as on any calculator, not 50.1.
 static double expr(parser *ps) {
-    double v = term(ps);
+    int pct;
+    double v = term(ps, &pct);
     for (;;) {
         skip(ps);
         char op = *ps->p;
         if (op != '+' && op != '-') return v;
         ps->p++;
-        double r = term(ps);
+        double r = term(ps, &pct);
+        if (pct) r *= v;
         v = op == '+' ? v + r : v - r;
     }
 }
@@ -130,9 +139,11 @@ static int strip_prefix(char *s, const char *pre) {
 
 // Returns 1 and writes the result if `norm` is an arithmetic question.
 int tai_calc(const char *norm, char *out, int out_len) {
-    if (tai_convert(norm, out, out_len)) return 1;
-    char s[TAI_MAX_Q + 1];
-    strncpy(s, norm, sizeof s - 1);
+    char words[128];
+    tai_number_words(norm, words, sizeof words);  // "twelve times seven" -> "12 times 7"
+    if (tai_everyday(words, out, out_len) || tai_convert(words, out, out_len)) return 1;
+    char s[128];
+    strncpy(s, words, sizeof s - 1);
     s[sizeof s - 1] = 0;
 
     static const char *const pre[] = {"what is ", "whats ", "what's ", "calculate ",
@@ -167,7 +178,7 @@ int tai_calc(const char *norm, char *out, int out_len) {
     }
     if (!digits || !ops) return 0;
 
-    parser ps = {s, 0};
+    parser ps = {s, 0, 0};
     double v = expr(&ps);
     skip(&ps);
     if (*ps.p) ps.err = 1;

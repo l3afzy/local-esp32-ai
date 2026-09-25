@@ -1,4 +1,4 @@
 torch>=2.1
 numpy
 # only for regenerating data/facts_generated.tsv (python data/more_facts.py)
-# mendeleev babel phonenumbers scipy
+# mendeleev babel phonenumbers scipy pycountry

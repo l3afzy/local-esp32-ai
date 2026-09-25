@@ -18,7 +18,9 @@ import sys
 import gate_index
 from common import MAX_A, load_facts, normalize
 
-FILLER = re.compile(r"^(sure|well|so|okay|ok|the answer|i think|great question|it is|as an)\b", re.I)
+# Preamble a direct answer never starts with. "Sure, ..." and "OK, ..." are
+# filler; a bare "OK." (Oklahoma's abbreviation) is an answer.
+FILLER = re.compile(r"^((sure|well|so|okay|ok)[,!]|(the answer|i think|great question|it is|as an)\b)", re.I)
 
 
 def run(binary, model, questions, *flags):

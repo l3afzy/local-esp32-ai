@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------- text
 
 static int prompt_char(char c) {
-    return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || strchr(" '+-*/.,%^()=", c);
+    return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || strchr(" '+-*/.,%^()=:", c);
 }
 
 // Same rules as normalize() in train/common.py.

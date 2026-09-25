@@ -10,10 +10,16 @@ you: capital of iceland?
 esp: Reykjavik.
 you: what is 12 times 7
 esp: 84
-you: 10 km in miles
-esp: 6.21371 miles
-you: melting point of gallium
-esp: 29.8 C.
+you: whats the safe temp for chicken
+esp: 165 F (74 C).
+you: 15% tip on 42.50
+esp: Tip 6.38, total 48.88.
+you: how long from 9am to 5:30pm
+esp: 8 hours 30 minutes
+you: what day of the week was july 20 1969
+esp: Sunday.
+you: emergency number uk
+esp: 999 or 112.
 you: how many moons does jupiter have
 esp: I don't know.
 ```
@@ -35,8 +41,8 @@ curriculum and shrinking every piece down to microcontroller size:
 ```
 "Whats the capital of Iceland??"
    │ normalize         lowercase, strip junk            "whats the capital of iceland"
-   │ compute           arithmetic, units, bases, primes  not computable
-   │ knowledge gate    indexed match, 7,796 phrasings    fact #1,204
+   │ compute           math, money, units, times, dates  not computable
+   │ knowledge gate    indexed match, 8,521 phrasings    fact #1,204
    │                   no match -> "I don't know."
    │ model (int4 GPT)  fact's shortest phrasing -> answer "capital of iceland"
    ▼                   greedy, stops at EOS, 48 chars max
@@ -53,24 +59,30 @@ Directness is enforced at every layer, not just requested in a prompt:
 4. **Greedy decoding.** It always takes the most likely token: no sampling, no temperature, no rambling.
 5. **Hard cap.** An answer is at most 48 characters, enforced in C.
 6. **Knowledge gate** (`gate.c`). A tiny model can't tell what it doesn't know. Ask for a capital it never saw and it will invent one. The gate checks the question against every phrasing the model was trained on. It tolerates typos, plurals, split words ("humming bird") and filler, and it requires the question type to agree: a "how many" question never gets a "what" answer. With no match, the answer is `I don't know.`
-7. **Computed answers** (`calc.c`, `convert.c`). Anything that can be calculated is, rather than memorized: arithmetic (`12*7`, `15% of 80`, `square root of 144`), unit conversion across 55 units (`10 km in miles`, `how many feet in a mile`, `100 f in celsius`), number bases (`255 in hex`), Roman numerals (`1994 in roman numerals`) and primes (`is 91 prime` → `No, 91 = 7 x 13.`).
+7. **Computed answers** (`calc.c`, `convert.c`, `everyday.c`). Anything that can be calculated is, rather than memorized, and number words work too ("twelve times seven", "half of 30", "a dozen"):
+   - math: `12*7`, `15% of 80`, `50 plus 10%` (= 55, like any calculator), `square root of 144`, `average of 3, 5 and 10`
+   - money: `15% tip on 42.50` → `Tip 6.38, total 48.88.`, `20% off 80`, `what percent is 12 of 48`, `split 90 between 4 people`
+   - 63 units: `10 km in miles`, `how many cups in a liter`, `350 f in c`, `32 psi in bar`
+   - times: `3pm in 24 hour time`, `how long from 9am to 5:30pm`
+   - dates: `what day was july 20 1969`, `days between march 3 and june 10`, `30 days after march 3 2025`, `is 2100 a leap year`
+   - numbers: `255 in hex`, `1994 in roman numerals`, `is 91 prime` → `No, 91 = 7 x 13.`
 
 ## Optimizations
 
-Three rounds so far, each measured on the C engine:
+Four rounds so far, each measured on the C engine:
 
-| | v1 | v2 | **v3 (now)** |
-|---|---|---|---|
-| Facts the model stores | 309 | 1,089 | **2,973** |
-| Accepted phrasings | 639 | 2,415 | **7,796** |
-| Questions answered by computation | arithmetic | arithmetic | **+ units, bases, Roman numerals, primes** |
-| Model file (flash) | 720 KB | 494 KB | **551 KB** |
-| Weights | int8 | int4 + QAT | int4 + QAT |
-| Gate time per question at 7,796 phrasings (x86) | n/a | 18 ms | **0.25 ms** |
-| Forward passes per answer (same facts) | n/a | 46.5 | **36.1** |
-| Matmuls on dual-core chips | 1 core | 1 core | **2 cores** |
-| Trained phrasings correct | 97% | 100% | **100% (7,797/7,797)** |
-| Held-out questions correct | 85% | 100% | **100% (124/124)** |
+| | v1 | v2 | v3 | **v4 (now)** |
+|---|---|---|---|---|
+| Facts the model stores | 309 | 1,089 | 2,973 | **3,230** |
+| Accepted phrasings | 639 | 2,415 | 7,796 | **8,521** |
+| Computed questions | arithmetic | arithmetic | + units, bases, Roman numerals, primes | **+ money, tips, percentages, times, dates, number words** |
+| Model file (flash) | 720 KB | 494 KB | 551 KB | **566 KB** |
+| Weights | int8 | int4 + QAT | int4 + QAT | int4 + QAT |
+| Gate time per question (x86) | n/a | 18 ms | 0.25 ms | **0.32 ms** |
+| Matmuls on dual-core chips | 1 core | 1 core | 2 cores | 2 cores |
+| Trained phrasings correct | 97% | 100% | 100% | **100% (8,522/8,522)** |
+| Held-out questions correct | 85% | 100% | 100% (124) | **100% (214/214)** |
+| Everyday questions, natural phrasing | n/a | n/a | 79% (71/90) | **100% (90/90)** |
 
 **v2: fit more facts per byte**
 - **Retrieval-canonical prompts.** The gate finds the fact, and the model only ever sees that fact's canonical key, never the raw text. Capacity goes to facts instead of typos, and accuracy on the chip matches training.
@@ -84,6 +96,11 @@ Three rounds so far, each measured on the C engine:
 - **An indexed gate.** Phrasings are stored as word IDs into a 1,610-word dictionary, with the question type precomputed. That's 97 KB instead of 312 KB of text. A question fuzzy-matches each of its words against the dictionary once, then scores 7,796 phrasings with integer compares: 18 ms → 0.25 ms on x86, about 70× faster. The index is built in Python at export time, and `evaluate.py` proves it parses all 7,796 phrasings exactly like the C gate.
 - **Shortest phrasing as the model's key.** On the chip every prompt character is a full forward pass, so each fact's key is its shortest accepted phrasing ("gold melting point", not "what is the melting point of gold"). That's 22% fewer forward passes per answer, and it fixed a context overflow on the longest question.
 - **Both cores.** On the ESP32 and ESP32-S3 each matmul is split across the two cores with FreeRTOS task notifications. Output rows are independent, so answers are bit-identical to single-core, which the emulator run confirms.
+
+**v4: smart and reliable for everyday use**
+- **Everyday knowledge.** Safe cooking temperatures (USDA), cooking basics, emergency numbers for 18 countries and the EU, the US poison control and 988 crisis lines, standard first aid (Red Cross / NHS), health reference numbers (CDC / AHA), household safety, money, holidays, daylight saving, and device shortcuts.
+- **Everyday math in code** (`everyday.c`): tips, discounts, percentages, bill splitting, averages, 12/24-hour time, durations across midnight, day of the week, days between dates, date arithmetic, leap years. Number words are understood. "50 plus 10%" means 55. Money rounds correctly (48.875 → 48.88, not the 48.87 floating point gives).
+- **A gate that understands how people ask**, measured on 90 new everyday questions written the way people type them. The first run got 71 right, and only one of the 19 misses was a wrong answer, not an "I don't know". Fixes that generalize: filler words ("should", "need", "make"), contractions ("when's", "isn't"), synonyms (temp→temperature, stay→last, replace→change), and treating "what date" and "when" as the same question. Two relaxations made it *worse* and were reverted. Letting any "how X" question match a "what" question turned "how far is pluto" into "what is pluto". Ignoring the word after "how" made the same question match "is pluto a planet". The final gate refuses all 30 must-refuse questions.
 
 ## Quick start: flash the prebuilt model
 
@@ -136,10 +153,10 @@ python data/more_facts.py > data/facts_generated.tsv
 |---|---|
 | Architecture | GPT: 4 layers, dim 128, 4 query heads / 2 K/V heads, MLP 384, context 96, tied embeddings |
 | Parameters | 615,680 |
-| Knowledge | 2,973 facts, 7,796 accepted phrasings, plus computed answers |
-| Model in flash | 551 KB: int4 weights 364 KB, int8 embeddings 25 KB, fact keys 64 KB, gate index 97 KB |
+| Knowledge | 3,230 facts, 8,521 accepted phrasings, plus computed answers |
+| Model in flash | 566 KB: int4 weights 364 KB, int8 embeddings 25 KB, fact keys 70 KB, gate index 107 KB |
 | RAM at runtime | about 65 KB (int8 KV cache 49 KB, activations, scales and gate buffers about 16 KB) |
-| Engine code | about 21 KB of Xtensa code and tables, pure C99, no dependencies |
+| Engine code | about 36 KB of Xtensa code and tables, pure C99, no dependencies |
 | Works on | ESP32, ESP32-S3, ESP32-C3 |
 
 ## Results
@@ -148,15 +165,16 @@ Scored by `train/evaluate.py`, which runs the real C engine (the same code the E
 
 | Test | Score |
 |---|---|
-| Every trained phrasing | 7,797 / 7,797 |
-| Held-out rephrasings the model never saw | 82 / 82 |
+| Every trained phrasing | 8,522 / 8,522 |
+| Held-out rephrasings of general facts | 83 / 83 |
 | ...including traps (Iceland vs Ireland, Guinea vs Guinea-Bissau, Sudan vs South Sudan, Fahrenheit→Celsius vs Celsius→Fahrenheit) | all correct |
-| Unknown topics that must be refused | 19 / 19 |
-| Computed answers (arithmetic, units, bases, Roman numerals, primes) | 23 / 23 |
-| Gate index parses like the C gate | 7,796 / 7,796 |
+| Everyday questions, phrased the way people type them (29 of them computed) | 80 / 80 |
+| Unknown topics that must be refused ("what time is it in tokyo", "how many calories are in a big mac") | 30 / 30 |
+| Calculator, units, bases, primes | 21 / 21 |
+| Gate index parses like the C gate | 8,521 / 8,521 |
 | Answers over 48 chars or starting with filler | 0 |
 
-Speed on a laptop CPU: 12 ms per model answer, 0.25 ms to refuse, and effectively instant for computed answers.
+Speed on a laptop CPU: about 15 ms per model answer, 0.3 ms to refuse, and effectively instant for computed answers.
 
 ### Verified on ESP32 firmware
 
@@ -164,11 +182,11 @@ Speed on a laptop CPU: 12 ms per model answer, 0.25 ms to refuse, and effectivel
 
   | Board | Flash used (of 3 MB app partition) | Static RAM |
   |---|---|---|
-  | ESP32 | 869 KB (28%) | 25.1 KB |
-  | ESP32-S3 | 866 KB (28%) | 22.1 KB |
-  | ESP32-C3 | 852 KB (27%) | 17.4 KB |
+  | ESP32 | 920 KB (29%) | 25.1 KB |
+  | ESP32-S3 | 916 KB (29%) | 22.1 KB |
+  | ESP32-C3 | 901 KB (29%) | 17.4 KB |
 
-- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image, on both cores: it boots with 275 KB of heap free and answers all 124 held-out questions plus a random 1,000 of the trained phrasings exactly as the PC build does.
+- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image, on both cores: it boots with 273 KB of heap free and answers all 214 eval questions plus a random 800 of the trained phrasings exactly as expected (1,014 / 1,014).
 - **Not yet timed on physical hardware.** Emulator timings aren't real. To measure on a board, set `SHOW_TIMING 1` in `firmware/src/main.cpp`.
 
 Re-run the emulator check yourself (needs [Espressif's QEMU](https://github.com/espressif/qemu/releases)):
@@ -183,14 +201,14 @@ echo "how much does a hummingbird weigh" | python qemu_test.py --qemu path/to/qe
 ```
 data/facts.tsv              hand-written facts (edit this)
 data/more_facts.py          generator for templated and dataset facts -> data/facts_generated.tsv
-data/eval.tsv               held-out questions: paraphrases, must-refuse, arithmetic
+data/eval.tsv               held-out questions: paraphrases, everyday, must-refuse, computed
 train/common.py             tokenizer and normalization (mirrored in C)
 train/model.py              the transformer, int4 fake-quantization for QAT
 train/train.py              training
 train/export.py             int4 quantization + export
 train/gate_index.py         builds the gate's word index (mirrors gate.c)
 train/evaluate.py           scores the real C engine
-firmware/lib/tinyai/        inference engine, gate, calculator, unit converter (C99)
+firmware/lib/tinyai/        inference engine, gate, calculator, units, everyday math (C99)
 firmware/src/main.cpp       serial chat for the ESP32
 firmware/qemu_test.py       runs the built firmware in the ESP32 emulator
 host/                       PC build of the same engine
@@ -199,6 +217,8 @@ host/                       PC build of the same engine
 ## Limits
 
 - It knows what's in `data/facts*.tsv` and nothing else. Anything else gets `I don't know.`, which is the point.
+- No clock or internet: "what time is it", "weather", "news" and "how many days until Christmas" can't be answered.
+- First-aid and health answers are short reference facts, not medical advice. In an emergency, call the local emergency number.
 - The gate matches words, not meaning. Heavily reworded questions can be refused even when the fact is known. Add those phrasings to the fact's line.
 - 616K parameters can store facts. They can't reason. Multi-step questions are out of scope.
 - Numbers from datasets are as good as the datasets: element data is from mendeleev, currencies from CLDR as of Babel 2.18.

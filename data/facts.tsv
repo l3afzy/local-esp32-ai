@@ -214,13 +214,12 @@ how many days are in a year|how many days in a year	365, or 366 in a leap year.
 how many days are in a leap year|how many days in a leap year	366.
 how many weeks are in a year|how many weeks in a year	52.
 how many months are in a year|how many months in a year	12.
-how many days are in february|how many days does february have	28, or 29 in a leap year.
+how many days does february have	28, or 29 in a leap year.
 how many years are in a century|how many years in a century	100.
 how many bits are in a byte|how many bits in a byte	8.
 how many bytes are in a kilobyte|how many bytes in a kb	1,024 (or 1,000 in SI).
 what is the value of pi|what is pi	3.14159.
 what is a prime number|define prime number	A number above 1 divisible only by 1 and itself.
-is two prime	Yes, the only even prime.
 what is the smallest prime number|what is the first prime number	2.
 how many sides does a hexagon have|how many sides on a hexagon	6.
 how many sides does a pentagon have|how many sides on a pentagon	5.
@@ -609,3 +608,128 @@ can you learn|do you learn	Only by retraining on new facts.
 do you have feelings|can you feel	No.
 are you alive|are you conscious	No.
 are you chatgpt|are you claude	No. I'm a tiny offline model on an ESP32.
+
+# ---- everyday: food safety (USDA safe minimum internal temperatures)
+what temperature should chicken be cooked to|how hot should chicken be|safe temperature for chicken|chicken internal temperature|what temp is chicken done|how hot should chicken be inside|safe temp for chicken	165 F (74 C).
+what temperature should turkey be cooked to|how hot should turkey be|safe temperature for turkey|turkey internal temperature|what temp is turkey done	165 F (74 C).
+what temperature should ground beef be cooked to|how hot should ground beef be|how hot should a burger be|safe temperature for ground beef|hamburger internal temperature|what temp is a burger done|burger internal temperature	160 F (71 C).
+what temperature should pork be cooked to|how hot should pork be|safe temperature for pork|pork internal temperature|what temp is pork done	145 F (63 C), then rest 3 minutes.
+what temperature should steak be cooked to|how hot should steak be|safe temperature for steak|steak internal temperature|safe temperature for beef	145 F (63 C), then rest 3 minutes.
+what temperature should fish be cooked to|how hot should fish be|safe temperature for fish|fish internal temperature|salmon internal temperature	145 F (63 C).
+what temperature should leftovers be reheated to|reheat leftovers temperature|safe temperature to reheat food	165 F (74 C).
+what temperature should a fridge be|how cold should a fridge be|fridge temperature|what temp should my fridge be|refrigerator temperature	40 F (4 C) or below.
+what temperature should a freezer be|how cold should a freezer be|freezer temperature|what temp should my freezer be	0 F (-18 C).
+how long can food sit out|can food sit out overnight|is it ok to leave food out overnight|how long can food be left out|how long can cooked food sit out	2 hours; 1 hour above 90 F (32 C).
+how long do leftovers last in the fridge|how long are leftovers good for|how long do leftovers last	3 to 4 days.
+how long do eggs last in the fridge|how long are eggs good for|how long do eggs last	3 to 5 weeks.
+how long does opened milk last|how long is milk good after opening|how long does milk last	About 7 days after opening.
+how long does it take to thaw a turkey|how long to thaw a turkey in the fridge|how long to defrost a turkey	1 day for every 4 to 5 pounds, in the fridge.
+how long to cook a turkey|how long does a turkey take to cook|turkey cooking time	About 15 minutes per pound at 325 F.
+# ---- everyday: cooking
+what is the rice to water ratio|how much water for rice|rice water ratio|how much water per cup of rice	About 2 cups water per cup of white rice.
+how long to cook rice|how long does rice take to cook|how long do you cook white rice|rice cooking time	18 to 20 minutes for white rice.
+how long to cook brown rice|how long does brown rice take	40 to 45 minutes.
+how long to cook pasta|how long does pasta take to cook|how long do you boil pasta|pasta cooking time|how long to boil spaghetti	8 to 12 minutes; check the package.
+how long to boil potatoes|how many minutes to boil potatoes|how long do potatoes take to boil|how long do you boil potatoes	15 to 20 minutes, cut in chunks.
+how long to bake chicken breast|how long do you bake chicken breasts|chicken breast baking time	20 to 25 minutes at 400 F (200 C).
+how long should steak rest|how long to rest a steak|how long do you let steak rest	5 to 10 minutes.
+how long to soft boil an egg|soft boiled egg time|how long for a soft boiled egg	6 minutes.
+how long to hard boil an egg|hard boiled egg time|how long for a hard boiled egg	10 to 12 minutes.
+how many tablespoons in a stick of butter|tablespoons in a stick of butter	8.
+how much is a stick of butter|how many cups is a stick of butter|how many grams in a stick of butter|stick of butter in grams	1/2 cup, or 113 grams.
+what can i use instead of buttermilk|buttermilk substitute|how do i make buttermilk	1 cup milk plus 1 tbsp lemon juice or vinegar.
+what can i use instead of an egg in baking|egg substitute for baking|egg replacement in baking	1 tbsp ground flax plus 3 tbsp water.
+how many eggs in a dozen|how many is a dozen|what is a dozen	12.
+how many is a baker's dozen|what is a bakers dozen	13.
+# ---- everyday: emergency numbers
+what is the emergency number in the us|emergency number in america|what is the us emergency number	911.
+what number do i call in an emergency|what is the emergency number|emergency phone number	911 in the US and Canada, 112 in Europe.
+what is the emergency number in canada|canada emergency number	911.
+what is the emergency number in mexico|mexico emergency number	911.
+what is the emergency number in the uk|uk emergency number|emergency number in england|what is the british emergency number	999 or 112.
+what is the emergency number in europe|european emergency number|eu emergency number	112.
+what is the emergency number in germany|germany emergency number	112; 110 for police.
+what is the emergency number in france|france emergency number	112.
+what is the emergency number in italy|italy emergency number	112.
+what is the emergency number in spain|spain emergency number	112.
+what is the emergency number in ireland|ireland emergency number	112 or 999.
+what is the emergency number in australia|australia emergency number	000.
+what is the emergency number in new zealand|new zealand emergency number	111.
+what is the emergency number in india|india emergency number	112.
+what is the emergency number in japan|japan emergency number	110 police; 119 fire and ambulance.
+what is the emergency number in china|china emergency number	110 police, 119 fire, 120 ambulance.
+what is the emergency number in south korea|korea emergency number	112 police; 119 fire and ambulance.
+what is the emergency number in brazil|brazil emergency number	190 police, 192 ambulance, 193 fire.
+what is the emergency number in the philippines|philippines emergency number	911.
+what is the emergency number in south africa|south africa emergency number	10111 police; 112 from a mobile.
+what is the poison control number|poison control phone number|poison control hotline	1-800-222-1222 in the US.
+what is the suicide hotline number|suicide crisis line|crisis hotline number|who do i call if i feel suicidal	988 in the US: call or text.
+# ---- everyday: first aid (Red Cross / NHS basics)
+what do i do for a burn|how do you treat a burn|burn first aid|how to treat a burn	Cool it under running water for 20 minutes.
+what do i do if someone is choking|how to help someone choking|choking first aid|someone is choking	5 back blows, then 5 abdominal thrusts.
+how do you do cpr|how many compressions for cpr|how many compressions and breaths|how to do cpr|cpr steps|what is the cpr ratio	30 chest compressions, then 2 breaths.
+how fast should cpr compressions be|cpr compression rate|how many compressions per minute	100 to 120 per minute.
+how deep are cpr compressions|cpr compression depth	At least 2 inches (5 cm) for adults.
+how do you stop a nosebleed|what to do for a nosebleed|nosebleed first aid	Lean forward and pinch the soft nose 10 minutes.
+what do i do for a bee sting|how to treat a bee sting|bee sting first aid	Scrape out the stinger, then apply a cold pack.
+how do you treat a sprain|what to do for a sprained ankle|sprain first aid	Rest, ice, compression, elevation.
+how long should i wash my hands|how long to wash hands|hand washing time	At least 20 seconds with soap.
+# ---- everyday: health numbers
+what is a normal blood pressure|normal blood pressure|what should my blood pressure be|healthy blood pressure	Below 120/80 mmHg.
+what temperature is a fever|what counts as a fever|fever temperature	38 C (100.4 F) or higher.
+what is a normal blood sugar level|normal fasting blood sugar|normal glucose level	70 to 99 mg/dL fasting.
+how do you calculate bmi|bmi formula|what is the bmi formula	Weight in kg divided by height in m squared.
+what is a healthy bmi|healthy bmi range|normal bmi range|what bmi is normal	18.5 to 24.9.
+how much sleep does a teenager need|how many hours should a teen sleep	8 to 10 hours.
+how much sleep does a child need|how many hours should a kid sleep	9 to 12 hours, ages 6 to 12.
+how many calories are in a pound of fat|how many calories to lose a pound	About 3,500.
+how long does it take to walk a mile|how long does it take to walk 1 mile|how long to walk one mile|how long to walk a mile|how many minutes to walk a mile	About 15 to 20 minutes.
+# ---- everyday: household safety
+can i mix bleach and ammonia|is it safe to mix bleach and ammonia|bleach and ammonia	No. It makes toxic chloramine gas.
+can i mix bleach and vinegar|is it safe to mix bleach and vinegar|bleach and vinegar	No. It releases toxic chlorine gas.
+how often should i change smoke detector batteries|how often to replace smoke alarm batteries|how often should i replace smoke alarm batteries|when to change smoke alarm batteries|smoke detector battery	At least once a year.
+how often should i replace smoke detectors|how long do smoke detectors last|when to replace smoke alarms	Every 10 years.
+how often should i change my air filter|how often to change hvac filter|furnace filter how often	Every 1 to 3 months.
+how do i restart my router|how to reset my wifi router|how to reboot a router|my wifi is not working	Unplug it for 30 seconds, then plug it back in.
+# ---- everyday: money
+how many cents are in a dollar|cents in a dollar|how many pennies are in a dollar	100.
+how many nickels are in a dollar|nickels in a dollar	20.
+how many dimes are in a dollar|dimes in a dollar	10.
+how many quarters are in a dollar|quarters in a dollar	4.
+how much is a quarter worth|how many cents is a quarter	25 cents.
+how much is a dime worth|how many cents is a dime	10 cents.
+how much is a nickel worth|how many cents is a nickel	5 cents.
+how much should i tip|how much do you tip|what is a normal tip|how much to tip at a restaurant	15 to 20 percent in the US.
+# ---- everyday: calendar
+when is new year's day|when is new years|what date is new years day|when is new year	January 1.
+when is valentine's day|what date is valentines day|when is valentines	February 14.
+when is halloween|what date is halloween	October 31.
+when is independence day|when is the fourth of july|when is july 4th	July 4, in the US.
+when is thanksgiving|when is thanksgiving this year|what day is thanksgiving|when is thanksgiving in the us	The fourth Thursday of November.
+when is thanksgiving in canada|canadian thanksgiving date	The second Monday of October.
+when is mother's day|when is mothers day in the us|what day is mothers day	The second Sunday of May, in the US.
+when is father's day|when is fathers day|what day is fathers day	The third Sunday of June, in the US.
+when is easter|when is easter this year|what date is easter|how is easter decided	A Sunday between March 22 and April 25.
+when is labor day|what day is labor day	The first Monday of September, in the US.
+when is memorial day|what day is memorial day	The last Monday of May.
+when is st patrick's day|when is saint patricks day|what date is st patricks day	March 17.
+when is boxing day|what date is boxing day	December 26.
+when does daylight saving time start|when do the clocks go forward|when do clocks spring forward|when does dst start	The second Sunday of March, in the US.
+when does daylight saving time end|when do the clocks go back|when do clocks fall back|when does dst end	The first Sunday of November, in the US.
+when does spring start|what is the first day of spring|when is the spring equinox	About March 20, north of the equator.
+when does summer start|what is the first day of summer|when is the summer solstice	About June 21, north of the equator.
+when does fall start|when does autumn start|when is the fall equinox	About September 22, north of the equator.
+when does winter start|what is the first day of winter|when is the winter solstice	About December 21, north of the equator.
+what is the longest day of the year|longest day of the year	About June 21, north of the equator.
+what is the shortest day of the year|shortest day of the year	About December 21, north of the equator.
+what is a leap year|why do we have leap years	A year with 366 days, to keep up with the sun.
+how often is a leap year|how often do leap years happen	Every 4 years, skipping most century years.
+# ---- everyday: devices
+how do i take a screenshot on windows|screenshot on windows|windows screenshot shortcut	Windows + Shift + S.
+how do i take a screenshot on a mac|screenshot on mac|mac screenshot shortcut	Cmd + Shift + 4 (or 3 for full screen).
+how do i take a screenshot on an iphone|screenshot on iphone|iphone screenshot	Press the side button and volume up.
+how do i take a screenshot on android|screenshot on android|android screenshot	Press power and volume down together.
+how do i copy and paste|copy paste shortcut|keyboard shortcut to copy	Ctrl+C, then Ctrl+V (Cmd on a Mac).
+how do i undo|undo shortcut|keyboard shortcut to undo	Ctrl+Z (Cmd+Z on a Mac).
+how do i force quit on a mac|force quit mac shortcut	Cmd + Option + Esc.
+how do i open task manager|task manager shortcut|how to force close a program on windows	Ctrl + Shift + Esc.

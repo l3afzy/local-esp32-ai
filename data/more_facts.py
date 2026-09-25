@@ -1,6 +1,6 @@
 """Generates the templated part of the facts (capitals, elements, countries, ...).
 
-    pip install mendeleev babel phonenumbers scipy
+    pip install mendeleev babel phonenumbers scipy pycountry
     python data/more_facts.py > data/facts_generated.tsv
 
 Hand-written facts live in facts.tsv; templated ones are generated here so
@@ -11,6 +11,7 @@ licensed packages rather than memory:
     babel / CLDR (BSD)     country currencies
     phonenumbers (Apache)  country calling codes
     scipy (BSD)            CODATA physical constants
+    pycountry (LGPL)       US state and Canadian province abbreviations
 """
 
 import unicodedata
@@ -202,6 +203,19 @@ COUNTRY_CODES = {
 }
 COUNTRY_EXTRA = {"the united kingdom": ["the uk", "britain"],
                  "the united states": ["the usa", "the us", "america"]}
+
+GAS_MARKS = {1: (140, 275), 2: (150, 300), 3: (170, 325), 4: (180, 350), 5: (190, 375),
+             6: (200, 400), 7: (220, 425), 8: (230, 450), 9: (240, 475)}
+
+CANADA_CAPITALS = {
+    "alberta": "Edmonton.", "british columbia": "Victoria.", "manitoba": "Winnipeg.",
+    "new brunswick": "Fredericton.", "newfoundland and labrador": "St. John's.",
+    "nova scotia": "Halifax.", "ontario": "Toronto.", "prince edward island": "Charlottetown.",
+    "quebec": "Quebec City.", "saskatchewan": "Regina.", "northwest territories": "Yellowknife.",
+    "nunavut": "Iqaluit.", "yukon": "Whitehorse.",
+}
+# codes that read as gate stop words can't be told apart from filler
+ABBREV_STOPWORDS = {"in", "or", "me", "hi", "ok", "de", "on", "so", "do", "be", "is", "it"}
 
 CONSTANTS = {  # scipy.constants name: (phrasings, unit to print, significant digits)
     "Planck constant": (["what is the planck constant", "planck's constant value"], "J s", 9),
@@ -425,6 +439,29 @@ def emit_countries():
             emit(each("what is the country code for {n}"), f"+{cc} to call; {code} as an ISO code.")
 
 
+def emit_subdivisions():
+    import pycountry
+
+    print("# US states and Canadian provinces (pycountry codes)")
+    for country in ("US", "CA"):
+        for sub in pycountry.subdivisions.get(country_code=country):
+            if sub.type not in ("State", "District", "Province", "Territory"):
+                continue
+            name, ab = ascii(sub.name).lower(), sub.code.split("-")[1]
+            if name == "district of columbia":
+                names = [name, "washington dc", "dc"]
+            else:
+                names = [name]
+            emit([t.format(n=n) for n in names for t in ("what is the abbreviation for {n}",
+                  "{n} abbreviation", "what is the postal code for {n}")], ab + ".")
+            if ab.lower() not in ABBREV_STOPWORDS:
+                kind = "state" if country == "US" else "province"
+                emit([f"what {kind} is {ab.lower()}", f"which {kind} has the abbreviation {ab.lower()}"],
+                     ascii(sub.name) + ".")
+    for prov, cap in CANADA_CAPITALS.items():
+        emit([f"what is the capital of {prov}", f"capital of {prov}"], cap)
+
+
 def emit_constants():
     import scipy.constants as sc
 
@@ -453,6 +490,7 @@ def main():
               f"what is the state capital of {state}"], cap)
     emit_elements()
     emit_countries()
+    emit_subdivisions()
     emit_constants()
     print("# animals")
     for animal, word in BABY_ANIMALS.items():
@@ -467,6 +505,10 @@ def main():
     print("# inventions")
     for thing, who in INVENTIONS.items():
         emit([f"who invented {thing}", f"who created {thing}"], who)
+    print("# oven gas marks")
+    for mark, (c, f) in GAS_MARKS.items():
+        emit([f"what is gas mark {mark} in celsius", f"gas mark {mark} in fahrenheit",
+              f"gas mark {mark}", f"what temperature is gas mark {mark}"], f"{c} C ({f} F).")
     print("# planets")
     for planet, (dist, year) in PLANETS.items():
         emit([f"how far is {planet} from the sun", f"distance from the sun to {planet}",

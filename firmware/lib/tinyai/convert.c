@@ -17,7 +17,7 @@
 
 #define MAX_TOK 24
 
-enum { LEN, MASS, VOL, TIME, SPEED, AREA, ENERGY, POWER, TEMP };
+enum { LEN, MASS, VOL, TIME, SPEED, AREA, ENERGY, POWER, PRESSURE, TEMP };
 
 typedef struct {
     const char *names;  // '|'-separated spellings, may contain spaces
@@ -81,6 +81,14 @@ static const unit UNITS[] = {
     {"w|watt|watts", POWER, 1, 0, "watt", "watts"},
     {"kw|kilowatt|kilowatts", POWER, 1000, 0, "kilowatt", "kilowatts"},
     {"hp|horsepower", POWER, 745.69987158227022, 0, "horsepower", "horsepower"},
+    {"pa|pascal|pascals", PRESSURE, 1, 0, "pascal", "pascals"},
+    {"hpa|hectopascal|hectopascals", PRESSURE, 100, 0, "hectopascal", "hectopascals"},
+    {"kpa|kilopascal|kilopascals", PRESSURE, 1000, 0, "kilopascal", "kilopascals"},
+    {"bar|bars", PRESSURE, 1e5, 0, "bar", "bar"},
+    {"mbar|millibar|millibars", PRESSURE, 100, 0, "millibar", "millibars"},
+    {"psi", PRESSURE, 6894.757293168361, 0, "psi", "psi"},
+    {"atm|atmosphere|atmospheres", PRESSURE, 101325, 0, "atmosphere", "atmospheres"},
+    {"mmhg|torr", PRESSURE, 133.322387415, 0, "mmHg", "mmHg"},
     {"c|celsius|centigrade|degrees c|degrees celsius|degree celsius", TEMP, 1, 273.15, "C", "C"},
     {"f|fahrenheit|degrees f|degrees fahrenheit|degree fahrenheit", TEMP, 5.0 / 9,
      273.15 - 32 * 5.0 / 9, "F", "F"},
@@ -355,7 +363,7 @@ static int numbers_question(char **tok, int n, char *out, int out_len) {
 
 // Returns 1 and writes the answer if `norm` is a computable question.
 int tai_convert(const char *norm, char *out, int out_len) {
-    char s[TAI_MAX_Q + 1], *tok[MAX_TOK];
+    char s[128], *tok[MAX_TOK];
     strncpy(s, norm, sizeof s - 1);
     s[sizeof s - 1] = 0;
     int n = split(s, tok);
