@@ -76,7 +76,7 @@ static int take_q4(reader *r, tai_q4 *w, int rows, int cols) {
     w->rows = rows;
     w->cols = cols;
     w->q = (const uint8_t *)take(r, (size_t)rows * cols / 2);
-    w->s = (const float *)take(r, (size_t)rows * (cols / TAI_GROUP) * 4);
+    w->s = (const uint16_t *)take(r, (size_t)rows * (cols / TAI_GROUP) * 2);
     return w->q && w->s && cols % TAI_GROUP == 0 ? 0 : -1;
 }
 
@@ -228,13 +228,27 @@ typedef struct {
     const tai_q4 *w;
 } mm_job;
 
+// IEEE half -> float. Scales are positive normals (export keeps them there);
+// zero and subnormals are handled anyway.
+static float half_to_float(uint16_t h) {
+    uint32_t sign = (uint32_t)(h & 0x8000) << 16, exp = (h >> 10) & 31, man = h & 1023, bits;
+    if (exp == 0) {
+        float f = (float)man * (1.0f / 16777216.0f);  // 2^-24
+        return sign ? -f : f;
+    }
+    bits = exp == 31 ? sign | 0x7f800000u | (man << 13) : sign | ((exp + 112) << 23) | (man << 13);
+    float f;
+    memcpy(&f, &bits, 4);
+    return f;
+}
+
 // Rows [lo, hi) of o = W x for int4 W, with x already set by set_input().
 static void matmul4_rows(void *ctx, int lo, int hi) {
     const mm_job *j = (const mm_job *)ctx;
     const tai_q4 *w = j->w;
     int groups = w->cols / TAI_GROUP;
     const uint8_t *p = w->q + (size_t)lo * (w->cols / 2);
-    const float *s = w->s + (size_t)lo * groups;
+    const uint16_t *s = w->s + (size_t)lo * groups;
     for (int r = lo; r < hi; r++) {
         const int8_t *x = j->m->xq;
         float acc = 0;
@@ -248,7 +262,7 @@ static void matmul4_rows(void *ctx, int lo, int hi) {
                        (int32_t)((b >> 16) & 15) * x[4] + (int32_t)((b >> 20) & 15) * x[5] +
                        (int32_t)((b >> 24) & 15) * x[6] + (int32_t)(b >> 28) * x[7];
             }
-            acc += (float)(dot - 8 * j->m->xsum[g]) * *s;
+            acc += (float)(dot - 8 * j->m->xsum[g]) * half_to_float(*s);
         }
         j->o[r] = acc * j->m->xs;
     }

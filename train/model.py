@@ -22,19 +22,19 @@ GROUP = 32  # int4 weights share one scale per 32 inputs
 class Config:
     vocab: int = 97
     ctx: int = 96
-    dim: int = 128
-    layers: int = 4
+    dim: int = 192
+    layers: int = 6
     heads: int = 4
     kv_heads: int = 2
-    hidden: int = 384
+    hidden: int = 576
 
 
 def quantize_int4(w):
     """Round weights exactly like train/export.py and the C engine do."""
     out, cols = w.shape
     g = w.reshape(out, cols // GROUP, GROUP)
-    scale = (g.abs().amax(-1, keepdim=True) / 7).clamp(min=1e-8)
-    scale = scale.half().float()  # scales ship as fp16
+    # scales ship as fp16; the floor keeps them out of fp16's subnormal range
+    scale = (g.abs().amax(-1, keepdim=True) / 7).clamp(min=6.2e-5).half().float()
     return (torch.clamp(torch.round(g / scale), -7, 7) * scale).reshape(out, cols)
 
 

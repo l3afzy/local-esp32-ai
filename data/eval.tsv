@@ -100,7 +100,7 @@ what is 12 in base 7	I don't know.
 who painted sunflowers	I don't know.
 when did the vietnam war end	I don't know.
 what is the chemical symbol for kryptonite	I don't know.
-what is the population of bolivia	I don't know.
+what is the population of atlantis	I don't know.
 what is the melting point of chocolate	I don't know.
 how long do crocodiles live	I don't know.
 who wrote the bible	I don't know.
@@ -306,3 +306,218 @@ how do i change a tire	I don't know.
 what time does walmart close	I don't know.
 how many calories in a slice of bread	I don't know.
 what is the emergency number in russia	I don't know.
+# Wikidata knowledge, asked casually (expected answers taken from the fact files)
+when was einstein born	March 14, 1879.
+einstein birthday	March 14, 1879.
+who was albert einstein?	German-born theoretical physicist (1879-1955).
+where was mozart born	Salzburg, Austria.
+when did lincoln die	April 15, 1865.
+who was marie curie	Polish-born French physicist and chemist.
+where was shakespeare born	Stratford-upon-Avon, United Kingdom.
+when was taylor swift born	December 13, 1989.
+who is lionel messi	Argentine association football player.
+who was the 16th president	Abraham Lincoln.
+what number president was obama	The 44th.
+which president was grover cleveland	The 22nd and 24th.
+when was lincoln president	1861 to 1865.
+population of germany	About 83.6 million (2024).
+how big is brazil	About 8,515,767 square km.
+what continent is egypt in	Africa.
+what language do they speak in switzerland	German, Italian, French and Romansh.
+which side of the road do they drive on in japan	Left.
+what is the highest point in japan	Mount Fuji.
+what country is barcelona in	Spain.
+population of chicago	About 2.7 million (2025).
+how high is kilimanjaro	5,895 m (19,341 ft).
+how long is the mississippi	About 3,766 km (2,340 miles).
+who wrote the great gatsby	F. Scott Fitzgerald.
+who wrote pride and prejudice	Jane Austen.
+who directed the godfather	Francis Ford Coppola.
+when did titanic come out	1997.
+when did the matrix come out	1999.
+who made the album thriller	Michael Jackson.
+who painted the starry night	Vincent van Gogh.
+when was oxford university founded	1096.
+when was the battle of waterloo	1815.
+when was the korean war	1950 to 1953.
+chemical formula for caffeine	C8H10N4O2.
+scientific name of a tiger	Panthera tigris.
+who created python	Guido van Rossum.
+who created javascript	Brendan Eich.
+who was roosevelt	I don't know.
+who was bush	I don't know.
+who directed jaws	I don't know.
+# survival, asked casually: written before any routing check, first score recorded in the README
+how can i make river water safe	Not untreated. Boil, filter or disinfect it.
+how many drops of bleach in a gallon of water	8 drops of 6% bleach per gallon; wait 30 min.
+is it ok to drink ocean water if im stranded	No. It dehydrates you faster.
+can i eat snow if im thirsty	Melt it first; eating it chills you.
+where do i look for water	Go downhill; follow green plants, game trails.
+is it smart to ration water when stranded	No. Drink what you need; ration sweat instead.
+how long should i boil water at high elevation	3 minutes above 6,500 ft (2,000 m).
+whats a solar still	Plastic over a pit; water condenses into a cup.
+signs im dehydrated	Thirst, dark urine, headache, dizziness.
+is it safe to drink from a lake	Not untreated. Boil, filter or disinfect it.
+best way to start a campfire	Tinder, then kindling, then bigger wood.
+how can i light a fire with no matches	Ferro rod, lens, bow drill, or battery and wool.
+how do you get a fire going when its raining	Split standing deadwood to reach the dry inside.
+whats good tinder	Dry grass, birch bark, cotton or wood shavings.
+how should i put out my campfire	Drown it, stir it, feel that it's cold.
+how do i keep warm at night in the woods	Stay dry, block wind, insulate from the ground.
+where is the best place to build a shelter	Dry, sheltered high ground, no dead trees above.
+hypothermia signs	Shivering, confusion, slurred speech, drowsy.
+what should i do if my friend has hypothermia	Get dry and warm; warm the chest and core first.
+should i rub my frostbitten fingers	No. Rubbing damages the frozen tissue.
+i fell through the ice what do i do	Turn back the way you came, kick, pull, roll.
+how thick does ice have to be to walk on it	At least 4 inches (10 cm) of clear ice.
+is it good to drink alcohol when cold	No. It makes you lose heat faster.
+my car is stuck in the snow	Stay in; run it 10 min an hour, exhaust clear.
+how do i call for help without a phone	3 whistle blasts, a mirror, bright colors, fire.
+whats the sos signal	... --- ... (3 short, 3 long, 3 short).
+how can i find north with no compass	Sun, shadow stick, or the North Star.
+how do you find the north star	Follow the Big Dipper's 2 end stars to Polaris.
+does moss really grow on the north side	Not reliably. Don't navigate by moss.
+what should i do if i get lost in the forest	Stop and stay put, keep warm, signal for help.
+how do i make my phone battery last longer	Airplane mode, low brightness, check it rarely.
+should i run away from a bear	No. Never run; bears can run 35 mph.
+grizzly attack what do i do	Play dead on your stomach, hands behind neck.
+what to do if a black bear attacks you	Fight back hard; aim at its face.
+a snake bit me	Get help; keep still and calm, no tourniquet.
+should i suck the venom out	No. Don't cut, suck, ice or tie it off.
+how do i get a tick out	Tweezers at the skin; pull straight up, steady.
+what if i see a cougar	Don't run; look big, make noise, fight back.
+keep bears away from food	Bear canister, 100 yards from your tent.
+what should i do if im outside during lightning	Get inside a building or hard-top car now.
+how do i know how far lightning is	Seconds to thunder / 5 = miles (/ 3 = km).
+where should i go during a tornado	Basement or small interior room, lowest floor.
+is it safe to drive through a flooded road	No. 1 foot of moving water can sweep a car away.
+what to do in a flash flood	Get to higher ground; never walk or drive in it.
+earthquake what should i do	Drop, cover and hold on.
+tsunami what do i do	Go to high ground or inland right away.
+can i use a generator in my house	Outside only, 20+ ft from doors and windows.
+how long will food in the fridge last if the power goes out	4 hours if the door stays closed.
+how do i get out of a rip current	Don't fight it; swim parallel to the shore.
+my car is sinking what do i do	Seatbelt off, window open, get out now.
+someone is bleeding a lot	Press hard on the wound and don't let up.
+where does a tourniquet go	2 to 3 inches above the wound, not on a joint.
+how do i treat someone in shock	Lay them down, raise legs if unhurt, keep warm.
+heat stroke what to do	Call emergency help; cool them fast with water.
+should i pop my blister	Don't pop it; pad it and keep it clean.
+what knot should i use to tie two ropes	Sheet bend, or a square knot for equal ropes.
+how long can i go without food	About 3 weeks, if you have water.
+how long can i live without water	About 3 days.
+are wild mushrooms safe to eat	No, unless an expert IDs them. Some are deadly.
+can i eat any berries i find	Only ones you know for sure. Many are toxic.
+how do i build a raft	I don't know.
+how do i make a bow and arrow	I don't know.
+how do i treat a scorpion sting	I don't know.
+what is the weather tomorrow	I have no weather data.
+how do i hunt a deer	I don't know.
+how do i trap a rabbit	I don't know.
+how many calories do i need to survive	I don't know.
+how to treat a jellyfish sting	I don't know.
+how to survive a plane crash	I don't know.
+# survival, second batch: written after the first was tuned, scored once before any change
+whats the fastest way to purify water	Boil it for 1 minute (3 above 6,500 ft).
+how many minutes should i boil water	1 minute at a rolling boil.
+is it safe to drink water from a puddle	Not untreated. Boil, filter or disinfect it.
+can i drink salt water to survive	No. It dehydrates you faster.
+can you drink pee	No. It's salty waste and worsens dehydration.
+im really thirsty but only have snow	Melt it first; eating it chills you.
+how do i get water in the desert	Dig at the outside bend of a dry riverbed.
+what are symptoms of being dehydrated	Thirst, dark urine, headache, dizziness.
+how do i make a fire without a lighter or matches	Ferro rod, lens, bow drill, or battery and wool.
+how do i keep my campfire going	I don't know.
+can i sleep in a tent with a heater	No. Fire and carbon monoxide risk.
+how cold is too cold to sleep outside	I don't know.
+how to warm up a person with hypothermia	Get dry and warm; warm the chest and core first.
+what helps frostbite	Rewarm in warm, not hot, water. Don't rub it.
+how thick should lake ice be to walk on	At least 4 inches (10 cm) of clear ice.
+is it safe to walk on a frozen lake	At least 4 inches (10 cm) of clear ice.
+how long can you survive in freezing water	About 1 hour until you pass out in icy water.
+what do i do if my car breaks down in the snow	Stay in; run it 10 min an hour, exhaust clear.
+what are the symptoms of heat stroke	Hot red skin, confusion, 103 F (39.4 C) or more.
+my friend passed out from the heat	Call emergency help; cool them fast with water.
+how to survive in extreme heat	Shade by day, move at night, keep skin covered.
+how many whistle blasts means help	Three of anything: 3 blasts, 3 fires, 3 flashes.
+how do you write sos in morse	... --- ... (3 short, 3 long, 3 short).
+which way is north at night	Follow the Big Dipper's 2 end stars to Polaris.
+is it safe to eat insects	Yes, cooked. Skip bright, hairy or smelly ones.
+can i eat a raw fish i caught	No. Cook freshwater fish to kill parasites.
+is it true you should play dead for bears	Grizzly: yes. Black bear: no, fight back.
+when should i spray bear spray	Aim slightly low at a charging bear and spray.
+a moose is charging at me	Run and get behind a tree or a car.
+i got bitten by a rattlesnake	Get help; keep still and calm, no tourniquet.
+how do i take off a tick	Tweezers at the skin; pull straight up, steady.
+a dog bit me	Wash it with soap for 15 min; get medical care.
+what do i do if lightning is close	Get inside a building or hard-top car now.
+is it safe to stand under a tree in a thunderstorm	Leave high ground and water; avoid lone trees.
+what room is safest in a tornado	Basement or small interior room, lowest floor.
+how deep of water can move a car	No. 1 foot of moving water can sweep a car away.
+what should i do when the ground starts shaking	Drop, cover and hold on.
+what to do if a wildfire is coming	Leave early when told; don't wait for flames.
+the power went out what should i do	Flashlights, not candles; keep the fridge shut.
+is it safe to run a generator in the garage	Outside only, 20+ ft from doors and windows.
+how do i escape a riptide	Don't fight it; swim parallel to the shore.
+how do i stop someone from bleeding	Press hard on the wound and don't let up.
+how tight should a tourniquet be	I don't know.
+what to do if someone breaks their leg	Splint as found, covering joints on each side.
+how to tie a loop that wont slip	The bowline: a fixed loop that won't slip.
+what should i pack in a go bag	Water, food, radio, light, batteries, first aid.
+how much water should i keep for a family of 4	4 gallons (15 L) a day.
+how do i build a canoe	I don't know.
+how do i skin a rabbit	I don't know.
+how do i make a spear	I don't know.
+how do i treat a spider bite	I don't know.
+what do i do if a wolf attacks	I don't know.
+how do i survive a nuclear attack	I don't know.
+how do i tan a hide	I don't know.
+how long can you survive without sleep	I don't know.
+# survival, third batch: written after the first two were tuned, scored once; this is the honest number
+whats the best way to start a fire	Tinder, then kindling, then bigger wood.
+how can i start a fire if all the wood is wet	Split standing deadwood to reach the dry inside.
+how do i make a fire with a battery	Touch both 9V terminals to fine steel wool.
+best wood to burn	Dry hardwood like oak, maple or ash.
+is it safe to cook inside a tent	No. Fire and carbon monoxide risk.
+how do i build a lean-to shelter	Poles on a ridgepole, back to the wind.
+is cotton clothing bad for camping	Yes. Wet cotton stops insulating; wear wool.
+what should i wear when its freezing	Base layer, warm middle, wind and rain shell.
+is it safe to drink water from a river	Not untreated. Boil, filter or disinfect it.
+how many drops of bleach to clean a gallon of water	8 drops of 6% bleach per gallon; wait 30 min.
+how long does it take to die of thirst	About 3 days.
+what are the first signs of hypothermia	Shivering, confusion, slurred speech, drowsy.
+what should i do for someone with frostbite	Rewarm in warm, not hot, water. Don't rub it.
+how can i tell if i have heat stroke	Hot red skin, confusion, 103 F (39.4 C) or more.
+how to cool down someone with heat exhaustion	Cool place, loosen clothes, sip water.
+how do i signal a plane for help	V means need help, X means need medical help.
+what does 3 whistles mean	Three of anything: 3 blasts, 3 fires, 3 flashes.
+how do i navigate using the stars	Follow the Big Dipper's 2 end stars to Polaris.
+how do you use a stick to find direction	Mark the shadow tip twice, 15 min apart: W to E.
+is it safe to eat grasshoppers	Yes, cooked. Skip bright, hairy or smelly ones.
+should i eat mushrooms if im starving	No, unless an expert IDs them. Some are deadly.
+what do i do if a bear walks into my camp	Stay calm, don't run; talk and back away slowly.
+how do i scare off a mountain lion	Don't run; look big, make noise, fight back.
+what should i do if a snake bites my leg	Get help; keep still and calm, no tourniquet.
+how do i pull out a tick	Tweezers at the skin; pull straight up, steady.
+how do i avoid getting bitten by mosquitoes	DEET or picaridin repellent, long sleeves.
+where is the safest place during lightning	Get inside a building or hard-top car now.
+what should i do if a tornado hits while im in my car	Get to a sturdy building; never an overpass.
+what to do if there is a tsunami warning	Go to high ground or inland right away.
+how long is freezer food good when the power is out	48 hours if full, 24 if half full, door shut.
+what are symptoms of carbon monoxide poisoning	Headache, dizziness, nausea, confusion.
+how do i survive being caught in a rip current	Don't fight it; swim parallel to the shore.
+how do i get out of a car that is underwater	Seatbelt off, window open, get out now.
+someone is bleeding from the leg	Press hard on the wound and don't let up.
+how do i make a splint for a broken arm	Splint as found, covering joints on each side.
+which knot joins two ropes of different sizes	Sheet bend, or a square knot for equal ropes.
+how much water should 3 people store for a week	21 gallons (79 L) for 7 days.
+lightning struck 15 seconds before the thunder	About 3.2 miles (5.1 km). Go indoors.
+how much bleach do i need for 3 gallons	24 drops of 6% bleach; wait 30 min.
+what do i do if my friend falls through the ice	I don't know.
+how do i build an igloo	I don't know.
+how do i catch a bird	I don't know.
+how do i treat a broken rib	I don't know.
+how do i purify water with a lifestraw	I don't know.
+how do i start a fire with a flint	I don't know.
+what do i do if a wolf is following me	I don't know.
+how do i survive a volcano eruption	I don't know.

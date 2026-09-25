@@ -6,17 +6,19 @@ Writes:
     firmware/data/model.bin        raw model (host build loads this)
     firmware/src/model_data.h      same bytes as a C array (flashed with the firmware)
 
-File layout, version 3 (little endian, every block padded to 4 bytes):
-    u32 magic "TAI1", version 3, vocab, ctx, dim, layers, heads, kv_heads,
+File layout, version 4 (little endian, every block padded to 4 bytes):
+    u32 magic "TAI1", version 4, vocab, ctx, dim, layers, heads, kv_heads,
         hidden, n_facts, n_known
     tok, pos      int8 [rows*cols] + f32 [rows] scales
     per layer:    n1 f32[dim], wq wk wv wo (int4), n2 f32[dim], w1 w2 (int4)
                   int4 = [rows*cols/2] bytes, two weights per byte, low
-                  nibble first, stored +8; then f32 [rows*cols/32] scales
+                  nibble first, stored +8; then f16 [rows*cols/32] scales
     norm          f32[dim]
     facts         u32 bytes + each fact's canonical key (shortest phrasing)
     gate index    see train/gate_index.py: word dictionary, and per accepted
-                  phrasing its fact, question type, length and word ids
+                  phrasing its fact, question type (+0x80: every word must
+                  match; +0x40: one extra question word is allowed), length
+                  and word ids
 """
 
 import argparse
@@ -46,13 +48,13 @@ def q4(w):
     """int4 with the exact rounding QAT trained against."""
     rows, cols = w.shape
     g = w.detach().float().reshape(rows, cols // GROUP, GROUP)
-    scale = (g.abs().amax(-1, keepdim=True) / 7).clamp(min=1e-8).half().float()
+    scale = (g.abs().amax(-1, keepdim=True) / 7).clamp(min=6.2e-5).half().float()
     q = torch.clamp(torch.round(g / scale), -7, 7).to(torch.int16).reshape(rows, cols)
     assert torch.equal((q.reshape(rows, cols // GROUP, GROUP) * scale).reshape(rows, cols),
                        quantize_int4(w.detach().float()))
     n = (q + 8).numpy().astype(np.uint8)
     packed = (n[:, 0::2] | (n[:, 1::2] << 4)).astype(np.uint8)
-    return pad4(packed.tobytes()) + scale.reshape(-1).numpy().astype("<f4").tobytes()
+    return pad4(packed.tobytes()) + pad4(scale.reshape(-1).numpy().astype("<f2").tobytes())
 
 
 def f32(t):
@@ -73,7 +75,8 @@ def main():
 
     ck = torch.load(args.ckpt, map_location="cpu")
     c, sd = ck["cfg"], ck["model"]
-    facts = load_facts()
+    strict, lenient = set(), set()
+    facts = load_facts(strict=strict, lenient=lenient)
     keys = [canonical(qs) for qs, _ in facts]
     known = {}
     for i, (qs, _) in enumerate(facts):
@@ -81,7 +84,7 @@ def main():
             known.setdefault(normalize(q), i)  # first fact wins a shared phrasing
     assert len(facts) < 65536
 
-    out = [struct.pack("<11I", 0x31494154, 3, c["vocab"], c["ctx"], c["dim"], c["layers"],
+    out = [struct.pack("<11I", 0x31494154, 4, c["vocab"], c["ctx"], c["dim"], c["layers"],
                        c["heads"], c["kv_heads"], c["hidden"], len(facts), len(known)),
            q8(sd["tok.weight"]), q8(sd["pos.weight"])]
     for l in range(c["layers"]):
@@ -92,7 +95,7 @@ def main():
         out += [q4(sd[p + n + ".weight"]) for n in ("w1", "w2")]
     out.append(f32(sd["norm.w"]))
     out.append(strings(keys))
-    index, n_words = gate_index.build(list(known.items()))
+    index, n_words = gate_index.build(list(known.items()), strict, lenient)
     out.append(index)
     data = b"".join(out)
 

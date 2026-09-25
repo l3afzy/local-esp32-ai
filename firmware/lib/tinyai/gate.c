@@ -21,13 +21,13 @@
 static const char *const STOP[] = {
     "a", "an", "the", "is", "are", "was", "were", "be", "do", "does", "did", "of", "in", "on",
     "at", "to", "for", "from", "by", "with", "and", "or", "what", "whats", "who", "whos", "how",
-    "when", "where", "which", "why", "tell", "me", "please", "you", "u", "your", "can", "could",
-    "would", "will", "i", "im", "want", "know", "wondering", "question", "quick", "hey", "hi",
+    "when", "where", "which", "why", "me", "please", "you", "u", "your", "can", "could",
+    "would", "will", "i", "im", "want", "wondering", "question", "quick", "hey", "hi",
     "yo", "ok", "so", "exactly", "roughly", "approximately", "about", "again", "quickly",
     "much", "many", "there", "it", "its", "that", "this", "we", "my", "have", "has", "called",
     "just", "like", "um", "uh", "hmm", "now", "actually", "really", "some", "any", "all",
     "should", "need", "needs", "must", "supposed", "ought", "make", "makes", "whens", "wheres",
-    "hows", "whys", "gonna", "wanna", "take", "takes", "once", "after",
+    "hows", "whys", "gonna", "wanna", "take", "takes", "once", "after", "if", "am",
 };
 
 // Words that add context but never change which fact is meant
@@ -39,7 +39,11 @@ static const char *const SOFT[] = {
     "average", "normal", "typical", "usually", "generally", "name", "thing", "kind", "type",
     "exact", "approx", "approximate", "grown", "adult", "full", "whole", "known",
     "today", "tomorrow", "tonight", "currently", "right", "app", "application", "program",
-    "treatment", "treat", "min", "minimum", "recommended",
+    "treatment", "treat", "min", "minimum", "recommended", "best", "way", "ways", "tip",
+    "tips", "safely", "survival", "wild", "wilderness", "woods", "outdoors", "stranded",
+    "okay", "idea", "safe", "true", "being", "only", "but", "close", "near", "nearby",
+    "coming", "approaching", "got", "their", "his", "her", "they", "them", "he", "she", "him",
+    "tell", "know", "get", "getting", "survive", "surviving",
 };
 
 // Same meaning, one spelling.
@@ -54,6 +58,10 @@ static const char *const SYNONYMS[][2] = {
     {"replace", "change"}, {"isnt", "not"}, {"arent", "not"}, {"doesnt", "not"}, {"dont", "not"},
     {"cant", "not"}, {"wont", "not"}, {"opened", "open"}, {"opening", "open"},
     {"spaghetti", "pasta"}, {"noodles", "pasta"}, {"detector", "alarm"}, {"detectors", "alarms"},
+    {"frostbitten", "frostbite"}, {"forest", "woods"}, {"forests", "woods"}, {"elevation", "altitude"},
+    {"no", "without"}, {"dehydrated", "dehydration"}, {"bit", "bite"}, {"bitten", "bite"},
+    {"bites", "bite"}, {"symptoms", "signs"}, {"symptom", "signs"}, {"broke", "broken"},
+    {"breaks", "broken"}, {"break", "broken"},
 };
 
 static int in_list(const char *w, const char *const *list, size_t n) {
@@ -62,8 +70,21 @@ static int in_list(const char *w, const char *const *list, size_t n) {
     return 0;
 }
 
+// Words that change an answer even as an aside: who it is for, or a
+// negation. A lenient phrasing never lets one of these go unmatched.
+static const char *const QUALIFIERS[] = {
+    "baby", "babies", "infant", "infants", "child", "children", "kid", "kids", "toddler",
+    "dog", "dogs", "cat", "cats", "pet", "pets", "someone", "somebody", "friend", "friends",
+    "buddy", "not", "without", "never",
+};
+
 static int is_stop(const char *w) { return in_list(w, STOP, sizeof STOP / sizeof *STOP); }
 static int is_soft(const char *w) { return in_list(w, SOFT, sizeof SOFT / sizeof *SOFT); }
+static int is_qualifier(const char *w) {
+    for (const char *c = w; *c; c++)
+        if (*c >= '0' && *c <= '9') return 1;  // "5 gallons" is not "a gallon"
+    return in_list(w, QUALIFIERS, sizeof QUALIFIERS / sizeof *QUALIFIERS);
+}
 
 // Splits normalized text into content words (letters/digits only, lowercased,
 // apostrophes dropped, stop words removed).
@@ -145,21 +166,51 @@ typedef struct {
     int n;
 } hits;
 
-// Every dictionary word matching `w`, exact or fuzzy.
-static void lookup(const tai_model *m, const char *w, hits *out) {
-    out->n = 0;
-    int lw = (int)strlen(w), lo = 0, hi = m->n_words - 1;
-    while (lo <= hi) {  // exact: binary search, the dictionary is sorted
+static int find_word(const tai_model *m, const char *w) {  // binary search, -1 if absent
+    int lo = 0, hi = m->n_words - 1;
+    while (lo <= hi) {
         int mid = (lo + hi) / 2, c = strcmp(w, m->words + m->word_off[mid]);
-        if (!c) {
-            out->h[out->n++] = (hit){(uint16_t)mid, 2};
-            break;
-        }
+        if (!c) return mid;
         if (c < 0) hi = mid - 1;
         else lo = mid + 1;
     }
+    return -1;
+}
+
+static void add_hit(hits *out, int id, uint8_t q) {
+    if (id >= 0 && out->n < MAX_HITS) out->h[out->n++] = (hit){(uint16_t)id, q};
+}
+
+// Every dictionary word matching `w`. A word the dictionary knows exactly is
+// taken as spelled right: only its plural forms are added (cheap lookups). An
+// unknown word is a likely typo, so the whole dictionary is scanned for
+// near matches. This keeps "iceland" from also matching "ireland".
+static void lookup(const tai_model *m, const char *w, hits *out) {
+    out->n = 0;
+    int lw = (int)strlen(w), exact = find_word(m, w);
+    if (exact >= 0) {
+        char v[MAX_WLEN + 2];
+        add_hit(out, exact, 2);
+        if (lw + 1 < MAX_WLEN) {
+            snprintf(v, sizeof v, "%ss", w);
+            add_hit(out, find_word(m, v), 1);
+        }
+        if (lw > 3 && w[lw - 1] == 's') {
+            snprintf(v, sizeof v, "%.*s", lw - 1, w);
+            add_hit(out, find_word(m, v), 1);
+        }
+        if (lw > 4 && !strcmp(w + lw - 3, "ies")) {
+            snprintf(v, sizeof v, "%.*sy", lw - 3, w);
+            add_hit(out, find_word(m, v), 1);
+        }
+        if (lw > 3 && w[lw - 1] == 'y' && lw + 2 < MAX_WLEN) {
+            snprintf(v, sizeof v, "%.*sies", lw - 1, w);
+            add_hit(out, find_word(m, v), 1);
+        }
+        return;
+    }
     for (int i = 0; i < m->n_words && out->n < MAX_HITS; i++) {
-        int d = lw - m->word_len[i];
+        int d = lw - (m->word_len[i] & 0x7f);
         if (d > 2 || d < -2) continue;  // no fuzzy match spans more than 2 letters
         const char *k = m->words + m->word_off[i];
         if (strcmp(w, k) && word_match(w, k)) out->h[out->n++] = (hit){(uint16_t)i, 1};
@@ -180,6 +231,16 @@ static int quality(const hits *h, uint16_t id) {
 static const char *const HOW[] = {"many", "much", "long", "far", "fast", "old", "big", "tall",
                                   "heavy", "hot", "cold", "deep", "high", "often", "smart"};
 
+// True if the words "way to" or "ways to" occur in s.
+static int way_to(const char *s) {
+    for (const char *p = s; (p = strstr(p, "way")) != NULL; p += 3) {
+        if (p != s && p[-1] != ' ') continue;
+        const char *q = p + 3 + (p[3] == 's');
+        if (!strncmp(q, " to", 3) && (q[3] == ' ' || q[3] == 0)) return 1;
+    }
+    return 0;
+}
+
 static int qtype(const char *s) {
     char w[MAX_WLEN];
     while (*s) {
@@ -193,6 +254,8 @@ static int qtype(const char *s) {
         while (*s == ' ') s++;
         int next_year = !strncmp(s, "year", 4) && (s[4] == ' ' || s[4] == 0);
         if ((!strcmp(w, "what") || !strcmp(w, "which")) && next_year) return 3;  // "what year" asks when
+        // "what's the best way to purify water" asks how
+        if ((!strcmp(w, "what") || !strcmp(w, "whats") || !strcmp(w, "which")) && way_to(s)) return 6;
         if (!strcmp(w, "what") || !strcmp(w, "whats") || !strcmp(w, "which")) return 1;
         if (!strcmp(w, "who") || !strcmp(w, "whos") || !strcmp(w, "whose")) return 2;
         if (!strcmp(w, "when") || !strcmp(w, "whens")) return 3;
@@ -230,6 +293,27 @@ static int dice(const char *a, const char *b) {
     return 2000 * common / (la - 1 + lb - 1);
 }
 
+// Index of the first content word after "with" or "using" ("purify water
+// with a lifestraw"), or MAX_WORDS if there is none.
+static int method_start(const char *norm) {
+    char w[MAX_WLEN];
+    int words = 0;
+    for (const char *s = norm; *s;) {
+        int len = 0;
+        while (*s == ' ') s++;
+        while (*s && *s != ' ') {
+            if (*s != '\'' && len < MAX_WLEN - 1) w[len++] = *s;
+            s++;
+        }
+        w[len] = 0;
+        if (!len) break;
+        if (!strcmp(w, "with") || !strcmp(w, "using")) return words;
+        static char one[MAX_WORDS][MAX_WLEN];
+        words += content_words(w, one);
+    }
+    return MAX_WORDS;
+}
+
 // Picks the known phrasing closest to the input. Every content word of the
 // input must be accounted for, the question types must agree, and the known
 // phrasing must be at least half present in the input. Among those, exact
@@ -243,10 +327,15 @@ int tai_gate(const tai_model *m, const char *norm) {
     // One dictionary lookup per input word, and per adjacent pair joined
     // ("humming bird" -> "hummingbird"). Static: too big for a small stack.
     static hits word[MAX_WORDS], joined[MAX_WORDS];
-    int soft[MAX_WORDS], can_join[MAX_WORDS];
+    int soft[MAX_WORDS], qualifier[MAX_WORDS], can_join[MAX_WORDS];
+    int method = method_start(norm);
     for (int i = 0; i < n; i++) {
         lookup(m, in[i], &word[i]);
         soft[i] = is_soft(in[i]);
+        // Not context: who it's for, a number, a negation, the method
+        // ("with a flint"), or a word some other advice is about ("freezer").
+        qualifier[i] = is_qualifier(in[i]) || i >= method;
+        for (int h = 0; h < word[i].n; h++) qualifier[i] |= m->word_len[word[i].h[h].id] >> 7;
         can_join[i] = i + 1 < n && strlen(in[i]) + strlen(in[i + 1]) < MAX_WLEN;
         if (can_join[i]) {
             char j[MAX_WLEN];
@@ -256,8 +345,20 @@ int tai_gate(const tai_model *m, const char *norm) {
         }
     }
 
-    long best_score = -1;
-    int best = 0;
+    // key = score without the length tie-break (0..59, always below one step of
+    // the key), so the best score always has the top key. If two different
+    // facts reach the top key, the question is ambiguous.
+    long best_score = -1, top_key = -1;
+    int best = 0, top_fact = 0, tied = 0;
+    // Every dictionary word any input word matched. A phrasing needs half its
+    // words in here to pass, so most are rejected after a few bit lookups.
+    static uint8_t hit_bits[65536 / 8];
+    memset(hit_bits, 0, (size_t)(m->n_words + 7) / 8);
+    for (int i = 0; i < n; i++) {
+        for (int h = 0; h < word[i].n; h++) hit_bits[word[i].h[h].id >> 3] |= 1u << (word[i].h[h].id & 7);
+        if (can_join[i])
+            for (int h = 0; h < joined[i].n; h++) hit_bits[joined[i].h[h].id >> 3] |= 1u << (joined[i].h[h].id & 7);
+    }
     const uint16_t *ids = m->known_words;
     const char *talk = m->small_talk;
     for (int p = 0; p < m->n_known; p++) {
@@ -269,10 +370,11 @@ int tai_gate(const tai_model *m, const char *norm) {
             text = talk;
             talk += strlen(talk) + 1;
         }
-        int tk = m->known_qtype[p];
+        int tk = m->known_qtype[p] & 0x3f, strict = m->known_qtype[p] >> 7,
+            lenient = (m->known_qtype[p] >> 6) & 1;
         int cross = tin && tk && tin != tk;
         if (cross && !compatible(tin, tk)) continue;
-        long score;
+        long score, key = -1;
         if (n == 0 || nk == 0) {
             // Small talk ("hi", "how are you"): nothing to fact-check, so
             // match the whole phrase instead.
@@ -281,8 +383,11 @@ int tai_gate(const tai_model *m, const char *norm) {
             if (d < 500) continue;
             score = d;
         } else {
+            int present = 0;
+            for (int j = 0; j < nk; j++) present += (hit_bits[k[j] >> 3] >> (k[j] & 7)) & 1;
+            if (2 * present < nk) continue;
             // input side: every word found, or excused as soft
-            int a_quality = 0, hard_missing = 0, in_order = 0, last_pos = -1;
+            int a_quality = 0, hard_missing = 0, extra = 0, in_order = 0, last_pos = -1;
             for (int i = 0; i < n && !hard_missing; i++) {
                 int f = 0, pos = -1;
                 for (int j = 0; j < nk; j++) {
@@ -308,7 +413,11 @@ int tai_gate(const tai_model *m, const char *norm) {
                     }
                 }
                 if (f) a_quality += f;
-                else if (!soft[i]) hard_missing = 1;
+                else if (soft[i]) continue;
+                // Advice phrasings (survival) excuse one word of context:
+                // "how to survive in *extreme* heat". Checked below.
+                else if (lenient && !extra && !qualifier[i]) extra = 1;
+                else hard_missing = 1;
             }
             if (hard_missing) continue;
             // known side: at least half of the phrasing's words present
@@ -325,19 +434,37 @@ int tai_gate(const tai_model *m, const char *norm) {
                     b_quality += f;
                 }
             }
-            if (2 * b_matched < nk || (cross && b_matched < nk)) continue;
+            // A strict phrasing names something ("michelle obama"): all of it
+            // must be in the question, or "obama" alone would reach it.
+            if (2 * b_matched < nk || ((cross || strict) && b_matched < nk)) continue;
+            // ...and only when every word of a 2+ word phrasing is there, so
+            // the extra word is context, not a different subject.
+            if (extra && (b_matched < nk || nk < 2)) continue;
             int d = abs(len - m->known_len[p]);
             // A known word the question never mentions costs more than a typo:
             // that phrasing asks something more specific ("... batteries").
-            score = 1000L * (a_quality + b_quality - 3 * (nk - b_matched) - 3 * cross) +
-                    60L * in_order + (d > 59 ? 0 : 59 - d);
+            // A phrasing with the question's own type beats one with no type:
+            // "where is the painter's studio" is not "the painter's studio painter".
+            int untyped = tin && !tk;
+            key = 1000L * (a_quality + b_quality - 3 * (nk - b_matched) - 3 * cross - 2 * untyped -
+                           4 * extra) +
+                  60L * in_order;
+            score = key + (d > 59 ? 0 : 59 - d);
+        }
+        int fact = m->known_fact[p] + 1;
+        if (key > top_key) {
+            top_key = key;
+            top_fact = fact;
+            tied = 0;
+        } else if (key >= 0 && key == top_key && fact != top_fact) {
+            tied = 1;  // two facts match equally well: don't guess
         }
         if (score > best_score) {
             best_score = score;
-            best = m->known_fact[p] + 1;
+            best = fact;
         }
     }
-    return best;
+    return tied ? 0 : best;
 }
 
 // For tests: "<qtype> <content words...>" of a string, as the gate sees it.

@@ -2,3 +2,5 @@ torch>=2.1
 numpy
 # only for regenerating data/facts_generated.tsv (python data/more_facts.py)
 # mendeleev babel phonenumbers scipy pycountry
+# data/wikidata_facts.py needs only the standard library (and network access
+# to qlever.dev, unless data/wikidata_cache/ is present)

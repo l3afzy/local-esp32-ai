@@ -1,4 +1,6 @@
 __pycache__/
 *.pt
+*.pt.partial
 host/tinyai
 firmware/.pio/
+data/wikidata_cache/

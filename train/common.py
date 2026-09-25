@@ -2,6 +2,7 @@
 change one, change both, or the device sees text the model never trained on."""
 
 import glob
+import os
 
 # Token ids. 0 ends an answer, 1 separates question from answer,
 # 2..96 are printable ASCII 32..126.
@@ -11,6 +12,13 @@ PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=:")
 MAX_Q = 64  # question chars kept (the tail, if longer)
 MAX_A = 48  # answer chars, hard cap: short answers are the point
 FACT_FILES = "data/facts*.tsv"
+# Facts about named things (people, films, places). The gate needs every word
+# of one of their phrasings, so "obama" can't reach "michelle obama"; short
+# names ("einstein") are listed as aliases only where they are unambiguous.
+STRICT_FILES = {"facts_wikidata.tsv"}
+# Advice (survival): people describe their situation, so the gate lets a
+# question add one word of context ("how to survive in *extreme* heat").
+LENIENT_FILES = {"facts_survival.tsv"}
 
 
 def encode_char(c):
@@ -51,18 +59,24 @@ def canonical(questions):
     """The one phrasing the model learns for a fact: the shortest. The gate
     maps every accepted phrasing to it, and on the device each prompt
     character costs a full forward pass, so shorter keys answer faster."""
-    return min((normalize(q) for q in questions), key=lambda q: (len(q), q))
+    return min((normalize(q) for q in questions if not q.startswith("~")), key=lambda q: (len(q), q))
 
 
-def load_facts(pattern=FACT_FILES):
+def load_facts(pattern=FACT_FILES, strict=None, lenient=None):
     """[(questions, answer)]. Any phrasing is accepted; the model is trained on
-    canonical(questions) only."""
+    canonical(questions) only. A phrasing starting with "~" is an alias: the
+    gate accepts it but it is never the key. If `strict` / `lenient` are sets,
+    the index of every fact from a STRICT_FILES / LENIENT_FILES file is added."""
     facts = []
     for path in sorted(glob.glob(pattern)):
+        name = os.path.basename(path)
         for line in open(path, encoding="utf-8"):
             line = line.rstrip("\n")
             if not line.strip() or line.startswith("#"):
                 continue
             qs, a = line.split("\t")
+            for flags, files in ((strict, STRICT_FILES), (lenient, LENIENT_FILES)):
+                if flags is not None and name in files:
+                    flags.add(len(facts))
             facts.append(([q.strip() for q in qs.split("|")], a.strip()))
     return facts

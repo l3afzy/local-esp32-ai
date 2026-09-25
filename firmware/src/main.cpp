@@ -1,7 +1,7 @@
-// Offline, direct-answer AI on an ESP32. Type a question over serial:
+// Offline survival and everyday answers on an ESP32. Type a question over serial:
 //
-//   you: how much does a hummingbird weigh
-//   esp: Between 2 and 20 grams.
+//   you: how do i purify water
+//   esp: Boil it for 1 minute (3 above 6,500 ft).
 #include <Arduino.h>
 
 #include "model_data.h"
@@ -64,7 +64,8 @@ void setup() {
     Serial.printf("\ntinyai ready: %d facts, %u KB model, %d cores, %u KB heap free\n",
                   model.n_facts, model_data_len / 1024, cores,
                   (unsigned)(ESP.getFreeHeap() / 1024));
-    Serial.println("Short, direct answers. It might make a mistake: double-check anything important.");
+    Serial.println("Offline survival and everyday answers. It might make a mistake:");
+    Serial.println("double-check anything important. In an emergency, call for help first.");
     Serial.print("you: ");
 }
 

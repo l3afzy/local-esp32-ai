@@ -3,7 +3,7 @@
     make -C host && python train/evaluate.py
 
 Checks:
-  1. every question in facts.tsv (and its paraphrases) -> exact answer
+  1. every question in data/facts*.tsv (and its paraphrases) -> exact answer
   2. data/eval.tsv held-out paraphrases, refusals and arithmetic
   3. directness: no answer may exceed the hard cap or open with filler
   4. the gate index (built in Python) parses every phrasing exactly like the
@@ -61,7 +61,13 @@ def main():
         print(f"    {p!r}: C {c!r}, Python {py!r}")
 
     pairs = [(q, a) for qs, a in load_facts() for q in qs]
-    got = run(args.bin, args.model, [q for q, _ in pairs])
+    # Every phrasing of a fact reaches the same key, so the model runs once per
+    # key: the C gate routes each phrasing (--gate), then the C engine answers
+    # each distinct key. Same result as asking every phrasing, 4x faster.
+    routes = run(args.bin, args.model, [q for q, _ in pairs], "--gate")
+    keys = sorted({r for r in routes if r != "-" and not r.startswith("=")})
+    answer = dict(zip(keys, run(args.bin, args.model, keys)))
+    got = [r[1:] if r.startswith("=") else "I don't know." if r == "-" else answer[r] for r in routes]
     report("trained questions", [(q, a, g) for (q, a), g in zip(pairs, got)])
 
     held = [tuple(l.rstrip("\n").split("\t")) for l in open(args.eval) if l.strip() and not l.startswith("#")]

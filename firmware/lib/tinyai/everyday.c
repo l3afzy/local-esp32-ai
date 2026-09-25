@@ -18,6 +18,9 @@
 //   "bmi 70 kg 175 cm"                 -> "BMI 22.9: healthy weight."
 //   "10 factorial"                     -> "3628800"
 //   "flip a coin"                      -> "Heads."
+//   "water for 4 people for 3 days"    -> "12 gallons (45 L) for 3 days."
+//   "thunder 10 seconds after lightning" -> "About 2.1 miles (3.4 km). Go indoors."
+//   "how much bleach for 4 gallons"    -> "32 drops of 6% bleach; wait 30 min."
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -717,6 +720,73 @@ static int factorial_question(char **tok, int n, char *out, int out_len) {
     return 1;
 }
 
+// ---------------------------------------------------------------- survival math
+
+static int unit(const char *t, const char *const *names) {
+    for (; *names; names++)
+        if (eq(t, *names)) return 1;
+    return 0;
+}
+
+static const char *const PEOPLE[] = {"people", "persons", "person", "adults", NULL};
+static const char *const DAYS[] = {"days", "day", NULL};
+static const char *const WEEKS[] = {"weeks", "week", NULL};
+static const char *const GALLONS[] = {"gallons", "gallon", "gal", NULL};
+static const char *const LITERS[] = {"liters", "liter", "litres", "litre", "l", NULL};
+static const char *const SECONDS[] = {"seconds", "second", "secs", "sec", "s", NULL};
+
+// Emergency water (Ready.gov: 1 gallon per person per day), thunder distance
+// (sound covers 343 m a second), and bleach for water (CDC: 8 drops of 6%
+// bleach per gallon, 2 per liter).
+static int survival_question(char **tok, int n, char *out, int out_len) {
+    int water = 0, amount = 0, without = 0, storm = 0, bleach = 0;
+    double people = 0, days = 0, secs = 0, gallons = 0, liters = 0, v;
+    for (int i = 0; i < n; i++) {
+        const char *t = tok[i], *u = i + 1 < n ? tok[i + 1] : "";
+        water |= eq(t, "water");
+        amount |= eq(t, "much") || unit(t, GALLONS) || unit(t, LITERS);
+        without |= eq(t, "without");
+        storm |= eq(t, "thunder") || eq(t, "lightning");
+        bleach |= eq(t, "bleach");
+        int a_week = eq(t, "a") && unit(u, WEEKS);
+        if (!num(t, &v) && !a_week) {
+            if ((eq(t, "family") || eq(t, "group") || eq(t, "household")) && eq(u, "of") && i + 2 < n &&
+                num(tok[i + 2], &v))
+                people = v;
+            continue;
+        }
+        if (a_week) v = 1;
+        if (unit(u, PEOPLE)) people = v;
+        else if (unit(u, DAYS)) days = v;
+        else if (unit(u, WEEKS)) days = 7 * v;
+        else if (unit(u, SECONDS)) secs = v;
+        else if (unit(u, GALLONS)) gallons = v;
+        else if (unit(u, LITERS)) liters = v;
+    }
+    if (storm && secs > 0 && secs <= 120) {
+        double km = secs * 0.343;
+        snprintf(out, (size_t)out_len, "About %.1f miles (%.1f km). Go indoors.", km / 1.609344, km);
+        return 1;
+    }
+    if (bleach && (gallons > 0 || liters > 0) && gallons <= 1000 && liters <= 4000) {
+        double drops = gallons > 0 ? 8 * gallons : 2 * liters;
+        if (drops <= 64) snprintf(out, (size_t)out_len, "%.0f drops of 6%% bleach; wait 30 min.", ceil(drops));
+        else snprintf(out, (size_t)out_len, "About %.1f tsp of 6%% bleach; wait 30 min.", drops / 96);
+        return 1;
+    }
+    if (water && amount && !without && !bleach && (people > 0 || days > 0) && people <= 1000 && days <= 365) {
+        double g = (people > 0 ? people : 1) * (days > 0 ? days : 1);
+        char gs[24], ds[24], what[40];
+        plain(gs, sizeof gs, g);
+        plain(ds, sizeof ds, days);
+        if (people > 0 && days > 0) snprintf(what, sizeof what, "for %s day%s", ds, days == 1 ? "" : "s");
+        else snprintf(what, sizeof what, "%s", people > 0 ? "a day" : "per person");
+        snprintf(out, (size_t)out_len, "%s gallon%s (%.0f L) %s.", gs, g == 1 ? "" : "s", g * 3.785, what);
+        return 1;
+    }
+    return 0;
+}
+
 static uint32_t rng_state = 2463534242u;
 void tai_seed(uint32_t seed) { rng_state = seed ? seed : 2463534242u; }
 
@@ -783,5 +853,6 @@ int tai_everyday(const char *norm, char *out, int out_len) {
     return dates_question(tok, n, out, out_len) || zone_question(tok, n, out, out_len) ||
            time_question(tok, n, out, out_len) || bmi_question(tok, n, out, out_len) ||
            factorial_question(tok, n, out, out_len) || chance_question(tok, n, out, out_len) ||
+           survival_question(tok, n, out, out_len) ||
            money_question(tok, n, out, out_len);
 }

@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 #define TAI_MAGIC 0x31494154u  // "TAI1"
-#define TAI_VERSION 3
+#define TAI_VERSION 4
 #define TAI_GROUP 32           // int4 weights: one scale per 32 inputs
 #define TAI_MAX_Q 64           // question chars kept, matches train/common.py
 #define TAI_MAX_A 48           // answer chars, hard cap
@@ -31,9 +31,9 @@ typedef struct {        // int8 matrix, one scale per row (embeddings)
     int rows, cols;
 } tai_q8;
 
-typedef struct {        // int4 matrix, one scale per row per 32 columns
+typedef struct {        // int4 matrix, one fp16 scale per row per 32 columns
     const uint8_t *q;   // two weights per byte, low nibble first, stored +8
-    const float *s;
+    const uint16_t *s;  // IEEE half precision
     int rows, cols;
 } tai_q4;
 
@@ -57,8 +57,9 @@ typedef struct {
     int n_facts;
     const char *facts;
     // Gate index (see train/gate_index.py): a sorted dictionary of content
-    // words, and for every accepted phrasing its fact, question type,
-    // length and content-word ids.
+    // words, and for every accepted phrasing its fact, question type
+    // (bit 7: every word must match; bit 6: one extra question word is
+    // allowed), length and content-word ids.
     int n_words, n_known;
     const char *words;
     const uint32_t *word_off;
