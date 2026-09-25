@@ -17,8 +17,16 @@ static void skip(parser *ps) {
 
 static double expr(parser *ps);
 
+static double power(parser *ps);
+
 static double atom(parser *ps) {
     skip(ps);
+    if (*ps->p == '#') {  // square root
+        ps->p++;
+        double v = power(ps);
+        if (v < 0) ps->err = 3;
+        return sqrt(v);
+    }
     if (*ps->p == '(') {
         ps->p++;
         double v = expr(ps);
@@ -130,6 +138,12 @@ int tai_calc(const char *norm, char *out, int out_len) {
                                       "compute ", "how much is ", "solve ", "evaluate "};
     for (size_t i = 0; i < sizeof pre / sizeof *pre; i++)
         if (strip_prefix(s, pre[i])) break;
+    replace_word(s, "the square root of", "#");
+    replace_word(s, "square root of", "#");
+    replace_word(s, "sqrt of", "#");
+    replace_word(s, "sqrt", "#");
+    replace_word(s, "squared", "^2");
+    replace_word(s, "cubed", "^3");
     replace_word(s, "multiplied by", "*");
     replace_word(s, "divided by", "/");
     replace_word(s, "to the power of", "^");
@@ -147,7 +161,7 @@ int tai_calc(const char *norm, char *out, int out_len) {
     int ops = 0, digits = 0;
     for (const char *c = s; *c; c++) {
         if (*c >= '0' && *c <= '9') digits++;
-        else if (strchr("+-*/^%", *c)) ops++;
+        else if (strchr("+-*/^%#", *c)) ops++;
         else if (!strchr(" .,()", *c)) return 0;
     }
     if (!digits || !ops) return 0;
@@ -157,6 +171,10 @@ int tai_calc(const char *norm, char *out, int out_len) {
     skip(&ps);
     if (*ps.p) ps.err = 1;
     if (ps.err == 1) return 0;
+    if (ps.err == 3) {
+        snprintf(out, (size_t)out_len, "Not a real number.");
+        return 1;
+    }
     if (ps.err == 2) {
         snprintf(out, (size_t)out_len, "Undefined, division by zero.");
         return 1;

@@ -1,8 +1,7 @@
 """Shared text rules. Every function here has a twin in firmware/lib/tinyai/ —
 change one, change both, or the device sees text the model never trained on."""
 
-import random
-import re
+import glob
 
 # Token ids. 0 ends an answer, 1 separates question from answer,
 # 2..96 are printable ASCII 32..126.
@@ -11,6 +10,7 @@ VOCAB_SIZE = 2 + 95
 PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=")
 MAX_Q = 64  # question chars kept (the tail, if longer)
 MAX_A = 48  # answer chars, hard cap: short answers are the point
+FACT_FILES = "data/facts*.tsv"
 
 
 def encode_char(c):
@@ -47,55 +47,15 @@ def encode_example(q, a):
     return p + [encode_char(c) for c in a[:MAX_A]] + [EOS], len(p)
 
 
-def load_facts(path):
+def load_facts(pattern=FACT_FILES):
+    """[(questions, answer)]. The first question of each fact is its canonical
+    form: the gate maps every phrasing to it, and it is all the model sees."""
     facts = []
-    for line in open(path, encoding="utf-8"):
-        line = line.rstrip("\n")
-        if not line or line.startswith("#"):
-            continue
-        qs, a = line.split("\t")
-        facts.append(([q.strip() for q in qs.split("|")], a.strip()))
+    for path in sorted(glob.glob(pattern)):
+        for line in open(path, encoding="utf-8"):
+            line = line.rstrip("\n")
+            if not line.strip() or line.startswith("#"):
+                continue
+            qs, a = line.split("\t")
+            facts.append(([q.strip() for q in qs.split("|")], a.strip()))
     return facts
-
-
-# Noise that real people add. The model must look past it.
-PREFIXES = ["", "", "", "hey ", "tell me ", "do you know ", "can you tell me ",
-            "quick question ", "please tell me ", "i want to know ", "so ",
-            "ok ", "i was wondering ", "yo "]
-SUFFIXES = ["", "", "", " please", " exactly", " roughly", " approximately",
-            " again", " quickly"]
-CONTRACTIONS = [("what is", "what's"), ("what is", "whats"), ("who is", "who's"),
-                ("how many", "how many"), ("do you", "do u"), ("you", "u")]
-KEYS = "qwertyuiopasdfghjklzxcvbnm"
-
-
-def typo(s, rng):
-    if len(s) < 6:
-        return s
-    i = rng.randrange(1, len(s) - 1)
-    op = rng.randrange(4)
-    if op == 0:
-        return s[:i] + s[i + 1:]                      # drop
-    if op == 1:
-        return s[:i] + s[i + 1] + s[i] + s[i + 2:]    # swap
-    if op == 2:
-        return s[:i] + s[i] + s[i:]                   # double
-    return s[:i] + rng.choice(KEYS) + s[i + 1:]       # wrong key
-
-
-def augment(q, rng):
-    s = q
-    if rng.random() < 0.3:
-        a, b = rng.choice(CONTRACTIONS)
-        s = s.replace(a, b, 1)
-    if rng.random() < 0.15:
-        s = re.sub(r"^(what|who|how|where|when|which) (is|are|was|does|do) ", "", s)
-    s = rng.choice(PREFIXES) + s + rng.choice(SUFFIXES)
-    if rng.random() < 0.5:
-        s = s + rng.choice(["?", "??", "", "."])
-    if rng.random() < 0.2:
-        s = s.capitalize()
-    n = rng.choice([0, 0, 0, 1, 1, 2])
-    for _ in range(n):
-        s = typo(s, rng)
-    return s

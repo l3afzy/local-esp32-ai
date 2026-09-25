@@ -21,8 +21,8 @@ void setup() {
         Serial.printf("model load failed (%d)\n", rc);
         for (;;) delay(1000);
     }
-    Serial.printf("\ntinyai ready: %d layers, dim %d, %u KB model, %u KB heap free\n",
-                  model.layers, model.dim, model_data_len / 1024, ESP.getFreeHeap() / 1024);
+    Serial.printf("\ntinyai ready: %d facts, %u KB model, %u KB heap free\n", model.n_facts,
+                  model_data_len / 1024, (unsigned)(ESP.getFreeHeap() / 1024));
     Serial.print("you: ");
 }
 

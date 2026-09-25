@@ -20,9 +20,6 @@ how much does an elephant weigh|what is the weight of an elephant|how heavy is a
 how long is a giraffe's neck|how long is a giraffe neck	About 2 meters.
 what do pandas eat|what does a panda eat	Bamboo.
 what do koalas eat|what does a koala eat	Eucalyptus leaves.
-what is a baby kangaroo called|what do you call a baby kangaroo	A joey.
-what is a baby cat called|what do you call a baby cat	A kitten.
-what is a baby dog called|what do you call a baby dog	A puppy.
 what is a group of lions called|what do you call a group of lions	A pride.
 what is a group of wolves called|what do you call a group of wolves	A pack.
 what is a group of crows called|what do you call a group of crows	A murder.
@@ -89,13 +86,6 @@ at what temperature does water boil|what is the boiling point of water|when does
 at what temperature does water freeze|what is the freezing point of water|when does water freeze	0 C.
 what is absolute zero|how cold is absolute zero	-273.15 C.
 what is the chemical formula for water|what is water made of	H2O.
-what is the chemical symbol for gold|what is the symbol for gold	Au.
-what is the chemical symbol for silver|what is the symbol for silver	Ag.
-what is the chemical symbol for iron|what is the symbol for iron	Fe.
-what is the chemical symbol for sodium|what is the symbol for sodium	Na.
-what is the chemical symbol for potassium|what is the symbol for potassium	K.
-what is the chemical symbol for oxygen|what is the symbol for oxygen	O.
-what is the chemical symbol for carbon|what is the symbol for carbon	C.
 what is the chemical formula for table salt|what is salt made of	NaCl.
 what is the chemical formula for carbon dioxide|what is co2	CO2, carbon dioxide.
 what is the most abundant gas in the air|what is air mostly made of	Nitrogen, about 78 percent.
@@ -104,9 +94,6 @@ what is the lightest element|what is the first element	Hydrogen.
 what is the heaviest natural element|what is the heaviest naturally occurring element	Uranium.
 how many elements are in the periodic table|how many elements are there	118.
 what is the hardest natural material|what is the hardest substance	Diamond.
-what is the atomic number of carbon|what number is carbon on the periodic table	6.
-what is the atomic number of oxygen|what number is oxygen on the periodic table	8.
-what is the atomic number of hydrogen|what number is hydrogen on the periodic table	1.
 what is the ph of water|what is the ph of pure water	7.
 what is the unit of electrical resistance|what is resistance measured in	The ohm.
 what is the unit of electric current|what is current measured in	The ampere.
@@ -116,7 +103,7 @@ what is the unit of power|what is power measured in	The watt.
 what is the unit of frequency|what is frequency measured in	The hertz.
 what is ohm's law|what is ohms law	V = I x R.
 what is newton's second law|what is newtons second law	F = m x a.
-what is e=mc2|what does e=mc2 mean	Energy equals mass times the speed of light squared.
+what is e=mc2|what does e=mc2 mean	Energy = mass x speed of light squared.
 who discovered gravity|who came up with gravity	Isaac Newton.
 who developed the theory of relativity|who invented relativity	Albert Einstein.
 who discovered penicillin|who found penicillin	Alexander Fleming.
@@ -187,7 +174,7 @@ how many countries are in the world|how many countries are there	195.
 what is the largest ocean|what is the biggest ocean	The Pacific.
 how many oceans are there|how many oceans are on earth	5.
 what is the longest river|what is the longest river in the world	The Nile.
-what is the largest desert|what is the biggest desert	Antarctica. The Sahara is the largest hot desert.
+what is the largest desert|what is the biggest desert	Antarctica. The Sahara is the largest hot one.
 what is the tallest mountain|what is the highest mountain in the world	Mount Everest.
 how tall is mount everest|how high is mount everest|what is the height of mount everest	8,849 meters.
 what is the deepest point in the ocean|what is the deepest part of the ocean	The Challenger Deep, about 10,935 m.
@@ -253,9 +240,7 @@ how many years are in a century|how many years in a century	100.
 how many bits are in a byte|how many bits in a byte	8.
 how many bytes are in a kilobyte|how many bytes in a kb	1,024 (or 1,000 in SI).
 what is the value of pi|what is pi	3.14159.
-what is the square root of 2|square root of 2	1.41421.
-what is the square root of 144|square root of 144	12.
-what is a prime number|define prime number	A number greater than 1 divisible only by 1 and itself.
+what is a prime number|define prime number	A number above 1 divisible only by 1 and itself.
 is 1 a prime number|is one prime	No.
 is 2 a prime number|is two prime	Yes, the only even prime.
 what is the smallest prime number|what is the first prime number	2.
@@ -279,7 +264,7 @@ how much caffeine is in a cup of coffee|how much caffeine does coffee have	About
 what vitamin comes from the sun|which vitamin do you get from sunlight	Vitamin D.
 what vitamin is in oranges|which vitamin do oranges have	Vitamin C.
 # Technology and esp32
-what is an esp32|what is the esp32	A low-cost Wi-Fi and Bluetooth microcontroller from Espressif.
+what is an esp32|what is the esp32	A Wi-Fi and Bluetooth microcontroller.
 who makes the esp32|who manufactures the esp32	Espressif Systems.
 how much ram does an esp32 have|how much memory does the esp32 have	520 KB of SRAM.
 how fast is the esp32|what is the clock speed of the esp32	Up to 240 MHz.
@@ -287,13 +272,13 @@ how many cores does the esp32 have|how many cores does an esp32 have	2.
 what voltage does the esp32 use|what voltage does an esp32 run on	3.3 V.
 how much flash does an esp32 have|how much storage does the esp32 have	Usually 4 MB.
 what are you|who are you|what is your name	A tiny language model running on an ESP32.
-how big are you|how many parameters do you have	About half a million parameters.
+how big are you|how many parameters do you have	About 1.2 million parameters.
 are you connected to the internet|do you use the internet	No. I run fully offline.
-what is ai|what is artificial intelligence	Software that performs tasks that normally need human intelligence.
-what is machine learning|define machine learning	Computers learning patterns from data instead of explicit rules.
-what is a neural network|define neural network	A model of layered weighted sums and nonlinearities trained on data.
+what is ai|what is artificial intelligence	Software doing tasks that need intelligence.
+what is machine learning|define machine learning	Computers learning patterns from data.
+what is a neural network|define neural network	Layers of weighted sums trained on data.
 what is a transformer|what is a transformer model	A neural network built on self-attention.
-what is an llm|what is a large language model	A large neural network trained to predict the next token of text.
+what is an llm|what is a large language model	A big neural network that predicts next tokens.
 what is a cpu|what does cpu stand for	Central processing unit.
 what is a gpu|what does gpu stand for	Graphics processing unit.
 what does ram stand for|what is ram	Random access memory.
@@ -316,5 +301,358 @@ thank you|thanks	You're welcome.
 goodbye|bye	Goodbye.
 can you help me|will you help me	Yes. Ask a question.
 what can you do|what do you do	Answer short factual questions offline.
-tell me a joke|say something funny	I would, but my context window is too short for the setup.
+tell me a joke|say something funny	My context window is too short for the setup.
 what is the meaning of life|what is the purpose of life	No single answer. 42, if you ask Douglas Adams.
+
+# ---- more animals
+how long do horses live|what is the lifespan of a horse	25 to 30 years.
+how much does a horse weigh|how heavy is a horse	380 to 1,000 kg.
+how fast can a horse run|what is the top speed of a horse	Up to about 70 km/h.
+how long do elephants live|what is the lifespan of an elephant	60 to 70 years.
+how long are elephants pregnant|how long is an elephant pregnancy	About 22 months.
+how long do goldfish live|what is the lifespan of a goldfish	10 to 15 years.
+how long do hamsters live|what is the lifespan of a hamster	2 to 3 years.
+how long do rabbits live|what is the lifespan of a rabbit	8 to 12 years.
+how long do parrots live|what is the lifespan of a parrot	20 to 80 years, depending on species.
+how many legs does a centipede have|how many legs do centipedes have	30 to 354, never exactly 100.
+how many legs does a crab have|how many legs do crabs have	10, including the claws.
+how many eyes does a spider have|how many eyes do spiders have	Usually 8.
+how many stomachs does a cow have|how many stomachs do cows have	One stomach with 4 compartments.
+what do cows eat|what does a cow eat	Grass.
+what is the largest fish|what is the biggest fish	The whale shark.
+what is the largest reptile|what is the biggest reptile	The saltwater crocodile.
+what is the largest cat|what is the biggest cat	The tiger.
+what is the largest land animal|what is the biggest land animal	The African elephant.
+what is the slowest mammal|what is the slowest animal	The three-toed sloth.
+what is the loudest animal|which animal is the loudest	The sperm whale.
+how fast does a snail move|what is the speed of a snail	About 1 mm per second.
+how fast can a human run|what is the top speed of a human	Top sprinters reach about 44 km/h.
+how fast is a peregrine falcon|how fast can a falcon dive	Over 300 km/h in a dive.
+how fast can a dolphin swim|how fast is a dolphin	Up to about 35 km/h.
+how many species of birds are there|how many bird species exist	About 11,000.
+is chocolate toxic to dogs|can dogs eat chocolate	Yes, it is toxic to dogs.
+are penguins birds|is a penguin a bird	Yes.
+can penguins fly|do penguins fly	No.
+# ---- human body
+how many muscles are in the human body|how many muscles do humans have	About 600.
+how many baby teeth do children have|how many teeth do kids have	20.
+how many bones does a baby have|how many bones are babies born with	About 270 to 300.
+what is the largest internal organ|what is the biggest internal organ	The liver.
+what does the heart do|what is the heart for	Pumps blood around the body.
+what does the liver do|what is the liver for	Filters blood and makes bile.
+how much air do lungs hold|what is the lung capacity	About 6 liters.
+how many times does the heart beat a day|how many heartbeats per day	About 100,000.
+what is the strongest muscle|which muscle is strongest	The masseter, by force.
+how many senses do humans have|how many senses are there	5 classic ones, more by modern counts.
+what is the universal donor blood type|which blood type is the universal donor	O negative.
+what is the universal recipient blood type|which blood type is the universal recipient	AB positive.
+what is the rarest blood type|which blood type is rarest	AB negative.
+how many neurons are in the brain|how many brain cells do we have	About 86 billion.
+how many cells are in the human body|how many cells does a human have	About 30 to 37 trillion.
+how long does it take to digest food|how long does digestion take	24 to 72 hours.
+how fast do fingernails grow|how fast do nails grow	About 3.5 mm per month.
+how fast does hair grow|how quickly does hair grow	About 1 cm per month.
+which vitamin helps blood clot|what vitamin is for blood clotting	Vitamin K.
+what does dna stand for|what is dna	Deoxyribonucleic acid.
+how much does a newborn baby weigh|how heavy is a newborn	About 3.5 kg.
+who was the tallest person ever|who is the tallest person in history	Robert Wadlow, 2.72 m.
+who was the oldest person ever|who lived the longest	Jeanne Calment, 122 years.
+# ---- science
+what is photosynthesis|how do plants make food	Plants making sugar from light, water and CO2.
+what is the speed of light in miles per second|how fast is light in miles	About 186,282 miles per second.
+what is the boiling point of water in fahrenheit|when does water boil in fahrenheit	212 F.
+what is the freezing point of water in fahrenheit|when does water freeze in fahrenheit	32 F.
+what is the melting point of iron|at what temperature does iron melt	1,538 C.
+what is the melting point of gold|at what temperature does gold melt	1,064 C.
+what is the most abundant element in the universe|most common element in the universe	Hydrogen.
+what is the most abundant element in the earth's crust|most common element in earth's crust	Oxygen.
+what is the most abundant metal in the earth's crust|most common metal in earth's crust	Aluminum.
+what is the densest element|what is the heaviest element by density	Osmium.
+what metal is liquid at room temperature|which metal is a liquid	Mercury.
+what is the chemical formula for methane|what is methane made of	CH4.
+what is the chemical formula for ammonia|what is ammonia made of	NH3.
+what is the chemical formula for glucose|what is glucose made of	C6H12O6.
+what is the chemical formula for ozone|what is ozone made of	O3.
+what is the chemical formula for sulfuric acid|what is sulfuric acid made of	H2SO4.
+what is the chemical formula for baking soda|what is baking soda made of	NaHCO3.
+what is the chemical formula for hydrogen peroxide|what is hydrogen peroxide made of	H2O2.
+what is avogadro's number|what is avogadros constant	6.022 x 10^23.
+what is planck's constant|what is plancks constant	6.626 x 10^-34 J s.
+what is the gravitational constant|what is big g	6.674 x 10^-11 N m2/kg2.
+what is the charge of an electron|electron charge	-1.602 x 10^-19 C.
+what is the speed of sound in water|how fast does sound travel in water	About 1,480 m/s.
+what is an atom made of|what are atoms made of	Protons, neutrons and electrons.
+what is the charge of a proton|is a proton positive or negative	Positive.
+what is the charge of a neutron|does a neutron have a charge	Neutral.
+what is the ph of lemon juice|how acidic is lemon juice	About 2.
+what is dry ice|what is dry ice made of	Solid carbon dioxide.
+what is the ozone layer|what does the ozone layer do	A layer of O3 that blocks UV light.
+what causes tides|why are there tides	The Moon's gravity, and the Sun's.
+what causes the seasons|why are there seasons	Earth's 23.4 degree axial tilt.
+what is the tilt of the earth|how tilted is the earth	23.4 degrees.
+how fast does the earth spin|how fast does the earth rotate	About 1,670 km/h at the equator.
+how fast does the earth orbit the sun|how fast does the earth move around the sun	About 107,000 km/h.
+what is the earth's core made of|what is the core of the earth made of	Iron and nickel.
+how hot is the earth's core|what is the temperature of the earth's core	About 5,000 to 6,000 C.
+how hot is lightning|what is the temperature of lightning	About 30,000 C, 5 times the Sun's surface.
+what is the largest volcano|what is the biggest volcano	Olympus Mons on Mars; Mauna Loa on Earth.
+what is the hottest place on earth|where is the hottest place	Death Valley, USA, at 56.7 C.
+what is the coldest place on earth|where is the coldest place	Antarctica, -89.2 C at Vostok.
+how many time zones are there|how many time zones exist	24 standard, about 38 in use.
+how much of the earth is covered by water|what percent of earth is water	About 71 percent.
+how deep is the ocean on average|what is the average depth of the ocean	About 3,700 m.
+what is the highest waterfall|what is the tallest waterfall	Angel Falls, Venezuela.
+what is the largest rainforest|what is the biggest rainforest	The Amazon.
+what is the largest country in africa|what is the biggest country in africa	Algeria.
+what is the largest country in south america|what is the biggest country in south america	Brazil.
+what is the longest river in europe|longest european river	The Volga.
+what is the longest river in asia|longest asian river	The Yangtze.
+what is the longest river in the united states|what is the longest river in the us	The Missouri.
+what is the tallest building|what is the tallest building in the world	The Burj Khalifa, 828 m.
+how tall is the eiffel tower|what is the height of the eiffel tower	330 m.
+how tall is the statue of liberty|what is the height of the statue of liberty	93 m with the pedestal.
+how long is the great wall of china|what is the length of the great wall	About 21,196 km with all branches.
+how old are the pyramids|how old are the pyramids of giza	About 4,500 years.
+when was the eiffel tower built|what year was the eiffel tower built	1889.
+what is the tallest tree|which tree is the tallest	Hyperion, a redwood of about 116 m.
+what is the oldest tree|which tree is the oldest	A bristlecone pine over 4,800 years old.
+what is the largest tree|what is the biggest tree	General Sherman, a giant sequoia.
+# ---- space
+how long does it take to get to mars|how long is the trip to mars	About 7 months.
+how long does it take to get to the moon|how long is the trip to the moon	About 3 days.
+how many stars are in the milky way|how many stars are in our galaxy	100 to 400 billion.
+how many galaxies are there|how many galaxies are in the universe	Hundreds of billions to 2 trillion.
+what is a black hole|what are black holes	Where gravity is so strong light can't escape.
+what is the brightest star|which star is brightest	Sirius, apart from the Sun.
+what is the north star|what is the pole star	Polaris.
+what is a comet|what are comets	An icy body that grows a tail near the Sun.
+what is the iss|what is the international space station	A crewed space station orbiting Earth.
+how high is the iss|how high does the iss orbit	About 400 km.
+how fast is the iss|how fast does the iss travel	About 28,000 km/h.
+how old is the moon|what is the age of the moon	About 4.5 billion years.
+what is the moon made of|what is the moon made from	Rock, mostly silicates.
+what is pluto|is pluto a planet	A dwarf planet.
+when was pluto reclassified|when did pluto stop being a planet	2006.
+does saturn have rings|are there rings around saturn	Yes.
+which planets have rings|what planets have rings	Jupiter, Saturn, Uranus and Neptune.
+what is the largest moon of jupiter|what is jupiter's biggest moon	Ganymede.
+what is the largest moon of saturn|what is saturn's biggest moon	Titan.
+how long is a day on jupiter|how long is a jupiter day	About 10 hours.
+how long is a day on venus|how long is a venus day	243 Earth days.
+# ---- history
+when did the roman empire fall|when did rome fall	476 AD, in the west.
+when did the american civil war start|when did the civil war start	1861.
+when did the american civil war end|when did the civil war end	1865.
+when did the french revolution start|when was the french revolution	1789.
+when did the cold war end|what year did the cold war end	1991.
+when did the soviet union collapse|when did the ussr end	1991.
+when did india gain independence|when did india become independent	1947.
+when was the magna carta signed|what year was the magna carta	1215.
+when did the renaissance begin|when did the renaissance start	The 14th century, in Italy.
+who was the first woman in space|first woman to go to space	Valentina Tereshkova.
+who was the first woman to win a nobel prize|first female nobel prize winner	Marie Curie.
+who was napoleon|who was napoleon bonaparte	Emperor of the French, 1804 to 1815.
+when did humans first fly|when was the first powered flight	1903.
+when was the united nations founded|when was the un created	1945.
+when was the euro introduced|when did the euro start	1999; notes and coins in 2002.
+when was the transistor invented|what year was the transistor invented	1947.
+when was the first email sent|when was email invented	1971.
+when was google founded|what year was google founded	1998.
+who founded google|who started google	Larry Page and Sergey Brin.
+when was facebook founded|what year was facebook founded	2004.
+who founded facebook|who started facebook	Mark Zuckerberg and co-founders.
+when was amazon founded|who founded amazon	1994, by Jeff Bezos.
+when was microsoft founded|what year was microsoft founded	1975.
+when was apple founded|what year was apple founded	1976.
+when was youtube founded|what year was youtube founded	2005.
+when was wikipedia launched|when did wikipedia start	2001.
+when was bitcoin created|when did bitcoin start	2009.
+who created bitcoin|who invented bitcoin	Satoshi Nakamoto, a pseudonym.
+when was the esp32 released|when did the esp32 come out	2016.
+when was the esp8266 released|when did the esp8266 come out	2014.
+when was arduino created|when did arduino start	2005.
+when was the raspberry pi released|when did the raspberry pi come out	2012.
+when was chatgpt released|when did chatgpt come out	November 2022.
+who made chatgpt|who created chatgpt	OpenAI.
+who made claude|who created claude	Anthropic.
+when was the transformer invented|when was attention is all you need published	2017, in Attention Is All You Need.
+how many symphonies did beethoven write|how many symphonies did beethoven compose	9.
+who sculpted david|who made the statue of david	Michelangelo.
+who sculpted the thinker|who made the thinker	Auguste Rodin.
+who discovered the electron|who found the electron	J.J. Thomson.
+who discovered the structure of dna|who found the dna double helix	Watson and Crick, with Rosalind Franklin.
+who discovered the atomic nucleus|who found the nucleus of the atom	Ernest Rutherford.
+who discovered x-rays|who found x-rays	Wilhelm Rontgen.
+who invented the go language|who created golang	Griesemer, Pike and Thompson at Google.
+# ---- units and math
+how many ounces are in a cup|how many oz in a cup	8 US fluid ounces.
+how many tablespoons are in a cup|how many tbsp in a cup	16.
+how many teaspoons are in a tablespoon|how many tsp in a tbsp	3.
+how many milliliters are in a teaspoon|how many ml in a teaspoon	About 5.
+how many milliliters are in a cup|how many ml in a cup	About 240.
+how many yards are in a mile|how many yards in a mile	1,760.
+how many feet are in a yard|how many feet in a yard	3.
+how many inches are in a yard|how many inches in a yard	36.
+how many meters are in a mile|how many meters in a mile	1,609.
+how long is a marathon|how many km is a marathon	42.195 km.
+how many miles is a marathon|how long is a marathon in miles	26.2 miles.
+how many acres are in a hectare|how many acres in a hectare	2.471.
+how many square meters are in a hectare|how many m2 in a hectare	10,000.
+how many square feet are in an acre|how many sq ft in an acre	43,560.
+how many kilograms are in a ton|how many kg in a tonne	1,000 in a metric tonne.
+how many pounds are in a ton|how many lbs in a ton	2,000 in a US ton.
+how many pounds are in a stone|how many lbs in a stone	14.
+what is 100 km/h in mph|100 kph in mph	62.1 mph.
+what is a knot|how fast is a knot	1.852 km/h.
+what is a nautical mile|how long is a nautical mile	1,852 meters.
+how many watts are in a horsepower|how many watts in a hp	About 746.
+how many joules are in a calorie|how many joules in a calorie	4.184.
+how many joules are in a kilowatt hour|how many joules in a kwh	3.6 million.
+how many bytes are in a megabyte|how many bytes in a mb	1,048,576 (or 1,000,000 in SI).
+how many megabytes are in a gigabyte|how many mb in a gb	1,024 (or 1,000 in SI).
+what is hexadecimal|what is hex	Base 16, digits 0-9 and A-F.
+what is 255 in hex|255 in hexadecimal	FF.
+what is 255 in binary|255 in binary	11111111.
+how many values can a byte hold|how many values fit in a byte	256.
+what is the largest 16 bit unsigned number|max value of uint16	65,535.
+what is the largest 32 bit signed number|max value of int32	2,147,483,647.
+how many zeros are in a million|how many zeros in a million	6.
+how many zeros are in a billion|how many zeros in a billion	9.
+how many zeros are in a trillion|how many zeros in a trillion	12.
+what is a googol|how big is a googol	10 to the power of 100.
+what is the golden ratio|what is phi	1.618.
+what is euler's number|what is the number e	2.71828.
+what is 0 factorial|what is zero factorial	1.
+how many degrees are in a right angle|how many degrees in a right angle	90.
+what is the area of a circle|area of a circle formula	pi x r^2.
+what is the circumference of a circle|circumference of a circle formula	2 x pi x r.
+what is the pythagorean theorem|pythagoras theorem	a^2 + b^2 = c^2.
+what is the volume of a sphere|volume of a sphere formula	4/3 x pi x r^3.
+what is a hypotenuse|what is the hypotenuse	The longest side of a right triangle.
+# ---- food
+how many calories are in an apple|how many calories does an apple have	About 95.
+how many calories are in a slice of pizza|how many calories does pizza have	About 285 per slice.
+how many calories are in a gram of fat|calories per gram of fat	9.
+how many calories are in a gram of protein|calories per gram of protein	4.
+how many calories are in a gram of carbs|calories per gram of carbohydrate	4.
+how much protein is in an egg|how much protein does an egg have	About 6 grams.
+how many calories should i eat a day|how many calories does a person need	About 2,000 to 2,500.
+what is the hottest pepper|what is the spiciest pepper	Pepper X.
+what is honey made from|how is honey made	Flower nectar, made by bees.
+which country produces the most coffee|who grows the most coffee	Brazil.
+what is sushi|what is sushi made of	Vinegared rice with fish or other toppings.
+# ---- electronics and esp32
+what is a resistor|what does a resistor do	A component that limits current.
+what is a capacitor|what does a capacitor do	A component that stores charge.
+what is a diode|what does a diode do	A component that lets current flow one way.
+what is a transistor|what does a transistor do	A semiconductor switch or amplifier.
+what is an led|what does led stand for	Light-emitting diode.
+what resistor do i need for an led|what resistor for an led	Usually 220 to 330 ohms.
+what is the forward voltage of a red led|red led voltage	About 2 V.
+what is the forward voltage of a blue led|blue led voltage	About 3 V.
+what is pwm|what does pwm stand for	Pulse-width modulation.
+what is i2c|what does i2c stand for	A 2-wire serial bus: SDA and SCL.
+what is spi|what does spi stand for	A 4-wire serial bus: MOSI, MISO, SCK, CS.
+what is uart|what does uart stand for	Asynchronous serial: TX and RX.
+what baud rate does the esp32 use|esp32 baud rate	115200 by default.
+how many gpio pins does the esp32 have|how many pins does the esp32 have	34.
+how many adc channels does the esp32 have|esp32 adc channels	18.
+what is the adc resolution of the esp32|esp32 adc resolution	12 bits.
+does the esp32 have a dac|esp32 dac	Yes, 2 channels of 8 bits.
+does the esp32 have bluetooth|esp32 bluetooth	Yes, Classic and BLE.
+what wifi does the esp32 support|esp32 wifi standard	2.4 GHz 802.11 b/g/n.
+does the esp32 support 5ghz wifi|can the esp32 use 5ghz	No. Only the ESP32-C5 does.
+what is the deep sleep current of the esp32|esp32 deep sleep power	About 10 uA.
+how much current does the esp32 draw|esp32 power consumption	About 80 mA, up to 240 mA on Wi-Fi TX.
+what cpu does the esp32 use|what processor is in the esp32	Xtensa LX6.
+what cpu does the esp32-s3 use|what processor is in the esp32-s3	Xtensa LX7 with vector instructions.
+what cpu does the esp32-c3 use|what processor is in the esp32-c3	A single RISC-V core.
+what is psram|what does psram do	External RAM added to a microcontroller.
+what is flash memory|what is flash storage	Storage that keeps data without power.
+what is gpio|what does gpio stand for	General-purpose input/output.
+what is an adc|what does adc stand for	Analog-to-digital converter.
+what is a dac|what does dac stand for	Digital-to-analog converter.
+what is a microcontroller|what is an mcu	A small computer on a single chip.
+what is arduino|what is an arduino	An open-source electronics platform.
+what is a raspberry pi|what is raspberry pi	A small single-board computer.
+what voltage is usb|what voltage does usb supply	5 V.
+are esp32 pins 5v tolerant|can the esp32 take 5v on a pin	No. Use 3.3 V logic.
+what is mqtt|what does mqtt do	A lightweight pub/sub messaging protocol.
+what is an ip address|what does ip address mean	A number that identifies a device on a network.
+what is tcp|what does tcp stand for	Transmission Control Protocol.
+what is udp|what does udp stand for	User Datagram Protocol.
+what port does http use|http port	80.
+what port does https use|https port	443.
+what port does ssh use|ssh port	22.
+what is dns|what does dns do	It maps domain names to IP addresses.
+what is an api|what does api stand for	Application programming interface.
+what is open source|what does open source mean	Code anyone can view, use and change.
+what is a compiler|what does a compiler do	It turns source code into machine code.
+what is an operating system|what does an os do	Software that manages hardware and programs.
+what is ascii|what does ascii stand for	A 7-bit text encoding with 128 characters.
+what is utf-8|what is utf8	A variable-length Unicode encoding.
+what is a bit|what does bit stand for	A binary digit, 0 or 1.
+what is a token|what is a token in ai	A chunk of text a language model reads.
+what is quantization|what does quantization mean	Storing numbers with fewer bits.
+what is attention|what is self-attention	How a transformer weighs other tokens.
+what is a kv cache|what does a kv cache do	Saved keys and values of past tokens.
+what is gradient descent|how does gradient descent work	Moving weights downhill on the loss.
+what is overfitting|what does overfitting mean	Memorizing data instead of generalizing.
+what is backpropagation|what is backprop	Computing gradients with the chain rule.
+what does gpt stand for|what is gpt	Generative pre-trained transformer.
+what is moore's law|what is moores law	Transistor counts double about every 2 years.
+# ---- everyday
+how many players are on a soccer team|how many players in soccer	11.
+how many players are on a basketball team|how many players in basketball	5.
+how many players are on a baseball team|how many players in baseball	9.
+how many players are on a volleyball team|how many players in volleyball	6.
+how many players are on a hockey team|how many players in ice hockey	6.
+how long is a soccer match|how long is a football match	90 minutes.
+how many rings are on the olympic flag|how many olympic rings are there	5.
+how often are the olympics held|how often are the olympics	Every 4 years.
+how many squares are on a chessboard|how many squares in chess	64.
+how many pieces are in chess|how many chess pieces are there	32.
+how many cards are in a deck|how many cards in a deck of cards	52.
+how many dots are on a die|how many dots on a dice	21.
+how many keys are on a piano|how many keys does a piano have	88.
+how many strings does a guitar have|how many strings on a guitar	6.
+how many strings does a violin have|how many strings on a violin	4.
+what is the most spoken language|what language do most people speak	English overall; Mandarin by native speakers.
+how many languages are there|how many languages are spoken in the world	About 7,000.
+how many letters are in the alphabet|how many letters in the english alphabet	26.
+how many vowels are there|what are the vowels	5: a, e, i, o, u.
+what is the most common letter in english|most used letter in english	E.
+what color do blue and yellow make|blue and yellow make what color	Green.
+what color do red and blue make|red and blue make what color	Purple.
+what color do red and yellow make|red and yellow make what color	Orange.
+what color do red and white make|red and white make what color	Pink.
+what are the primary colors of paint|what are the primary colors	Red, yellow and blue.
+how many hours are in a year|how many hours in a year	8,760.
+when is christmas|what day is christmas	December 25.
+how many states are in the us|how many states are in america	50.
+how many stripes are on the us flag|how many stripes on the american flag	13.
+how many provinces does canada have|how many provinces are in canada	10, plus 3 territories.
+how many countries are in the eu|how many countries are in the european union	27.
+how many countries are in africa|how many african countries are there	54.
+what is the population of china|how many people live in china	About 1.4 billion.
+what is the population of india|how many people live in india	About 1.45 billion.
+what is the population of the united states|how many people live in the us	About 340 million.
+what is the population of tokyo|how many people live in tokyo	About 37 million in the metro area.
+what is the population of london|how many people live in london	About 9 million.
+what is the most visited country|which country gets the most tourists	France.
+how fast does a plane fly|how fast is a passenger jet	About 900 km/h.
+how high do planes fly|what altitude do planes fly at	About 10 to 12 km.
+what is the deepest hole ever dug|what is the deepest hole	Kola Superdeep Borehole, 12.2 km.
+# ---- about me and small talk
+good morning|morning	Good morning.
+good night|night	Good night.
+what time is it|what is the time	I have no clock.
+what is today's date|what day is it today	I have no calendar.
+what is the weather|what is the weather like	I have no weather data.
+are you smart|how smart are you	I know about 900 facts. That's it.
+how do you work|how does this work	A tiny transformer with int4 weights.
+what language do you speak|do you speak english	English.
+can you learn|do you learn	Only by retraining on new facts.
+do you have feelings|can you feel	No.
+are you alive|are you conscious	No.
+are you chatgpt|are you claude	No. I'm a tiny offline model on an ESP32.

@@ -1,4 +1,4 @@
-"""Quantize a checkpoint to int8 and write the files the device needs.
+"""Quantize a checkpoint and write the files the device needs.
 
     python train/export.py
 
@@ -6,12 +6,17 @@ Writes:
     firmware/data/model.bin        raw model (host build loads this)
     firmware/src/model_data.h      same bytes as a C array (flashed with the firmware)
 
-Format (little endian, every block padded to 4 bytes):
-    u32 magic "TAI1", version, vocab, ctx, dim, layers, heads, hidden, n_known
-    tok, pos                         int8[rows*cols] + f32[rows] scales
-    per layer: n1 f32[dim], wq wk wv wo, n2 f32[dim], w1 w2
-    norm f32[dim]
-    u32 len, known questions as NUL-separated normalized strings
+Format v2 (little endian, every block padded to 4 bytes):
+    u32 magic "TAI1", version 2, vocab, ctx, dim, layers, heads, kv_heads,
+        hidden, n_facts, n_known
+    tok, pos      int8 [rows*cols] + f32 [rows] scales
+    per layer:    n1 f32[dim], wq wk wv wo (int4), n2 f32[dim], w1 w2 (int4)
+                  int4 = [rows*cols/2] bytes, two weights per byte, low
+                  nibble first, stored +8; then f32 [rows*cols/32] scales
+    norm          f32[dim]
+    facts         u32 bytes + canonical questions, NUL-separated
+    known         u32 bytes + every accepted phrasing, NUL-separated
+    known_fact    u16 [n_known]: which fact each phrasing belongs to
 """
 
 import argparse
@@ -21,61 +26,73 @@ import numpy as np
 import torch
 
 from common import load_facts, normalize
+from model import GROUP, quantize_int4
 
 
 def pad4(b):
     return b + b"\0" * (-len(b) % 4)
 
 
-def qmat(w):
-    """Symmetric per-row int8. Returns bytes and the max abs round-trip error."""
+def q8(w):
     w = w.detach().float().numpy()
     scale = np.abs(w).max(axis=1) / 127.0
     scale[scale == 0] = 1.0
     q = np.clip(np.round(w / scale[:, None]), -127, 127).astype(np.int8)
-    err = np.abs(q * scale[:, None] - w).max()
-    return pad4(q.tobytes()) + scale.astype("<f4").tobytes(), err
+    return pad4(q.tobytes()) + scale.astype("<f4").tobytes()
+
+
+def q4(w):
+    """int4 with the exact rounding QAT trained against."""
+    rows, cols = w.shape
+    g = w.detach().float().reshape(rows, cols // GROUP, GROUP)
+    scale = (g.abs().amax(-1, keepdim=True) / 7).clamp(min=1e-8).half().float()
+    q = torch.clamp(torch.round(g / scale), -7, 7).to(torch.int16).reshape(rows, cols)
+    assert torch.equal((q.reshape(rows, cols // GROUP, GROUP) * scale).reshape(rows, cols),
+                       quantize_int4(w.detach().float()))
+    n = (q + 8).numpy().astype(np.uint8)
+    packed = (n[:, 0::2] | (n[:, 1::2] << 4)).astype(np.uint8)
+    return pad4(packed.tobytes()) + scale.reshape(-1).numpy().astype("<f4").tobytes()
 
 
 def f32(t):
     return t.detach().float().numpy().astype("<f4").tobytes()
 
 
+def strings(items):
+    blob = "\0".join(items).encode("ascii") + b"\0"
+    return struct.pack("<I", len(blob)) + pad4(blob)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", default="train/ckpt.pt")
-    ap.add_argument("--data", default="data/facts.tsv")
     ap.add_argument("--bin", default="firmware/data/model.bin")
     ap.add_argument("--header", default="firmware/src/model_data.h")
     args = ap.parse_args()
 
     ck = torch.load(args.ckpt, map_location="cpu")
     c, sd = ck["cfg"], ck["model"]
-    known = sorted({normalize(q) for qs, _ in load_facts(args.data) for q in qs})
+    facts = load_facts()
+    canonical = [normalize(qs[0]) for qs, _ in facts]
+    known = {}
+    for i, (qs, _) in enumerate(facts):
+        for q in qs:
+            known.setdefault(normalize(q), i)  # first fact wins a shared phrasing
+    assert len(facts) < 65536
 
-    out = [struct.pack("<9I", 0x31494154, 1, c["vocab"], c["ctx"], c["dim"], c["layers"],
-                       c["heads"], c["hidden"], len(known))]
-    worst = 0.0
-
-    def add_q(name):
-        nonlocal worst
-        b, e = qmat(sd[name])
-        worst = max(worst, e)
-        out.append(b)
-
-    add_q("tok.weight")
-    add_q("pos.weight")
+    out = [struct.pack("<11I", 0x31494154, 2, c["vocab"], c["ctx"], c["dim"], c["layers"],
+                       c["heads"], c["kv_heads"], c["hidden"], len(facts), len(known)),
+           q8(sd["tok.weight"]), q8(sd["pos.weight"])]
     for l in range(c["layers"]):
         p = f"blocks.{l}."
         out.append(f32(sd[p + "n1.w"]))
-        for n in ("wq", "wk", "wv", "wo"):
-            add_q(p + n + ".weight")
+        out += [q4(sd[p + n + ".weight"]) for n in ("wq", "wk", "wv", "wo")]
         out.append(f32(sd[p + "n2.w"]))
-        add_q(p + "w1.weight")
-        add_q(p + "w2.weight")
+        out += [q4(sd[p + n + ".weight"]) for n in ("w1", "w2")]
     out.append(f32(sd["norm.w"]))
-    blob = "\0".join(known).encode() + b"\0"
-    out.append(struct.pack("<I", len(blob)) + pad4(blob))
+    out.append(strings(canonical))
+    out.append(strings(list(known)))
+    out.append(pad4(np.array(list(known.values()), dtype="<u2").tobytes()))
     data = b"".join(out)
 
     with open(args.bin, "wb") as f:
@@ -88,8 +105,8 @@ def main():
             f.write(",".join(str(x) for x in data[i:i + 32]) + ",\n")
         f.write("};\n")
     n_params = sum(v.numel() for v in sd.values())
-    print(f"{n_params:,} params -> {len(data):,} bytes, {len(known)} known questions, "
-          f"max quantization error {worst:.4f}")
+    print(f"{n_params:,} params -> {len(data):,} bytes ({8 * len(data) / n_params:.2f} bits/param "
+          f"incl. text), {len(facts)} facts, {len(known)} phrasings")
 
 
 if __name__ == "__main__":

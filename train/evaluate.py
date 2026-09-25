@@ -9,12 +9,13 @@ Checks:
 """
 
 import argparse
+import re
 import subprocess
 import sys
 
 from common import MAX_A, load_facts
 
-FILLER = ("sure", "well", "so ", "the answer", "i think", "great question", "it is", "as an")
+FILLER = re.compile(r"^(sure|well|so|okay|ok|the answer|i think|great question|it is|as an)\b", re.I)
 
 
 def run(binary, model, questions):
@@ -36,13 +37,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bin", default="host/tinyai")
     ap.add_argument("--model", default="firmware/data/model.bin")
-    ap.add_argument("--facts", default="data/facts.tsv")
     ap.add_argument("--eval", default="data/eval.tsv")
     ap.add_argument("--min-heldout", type=float, default=0.0,
                     help="exit 1 if held-out accuracy falls below this")
     args = ap.parse_args()
 
-    pairs = [(q, a) for qs, a in load_facts(args.facts) for q in qs]
+    pairs = [(q, a) for qs, a in load_facts() for q in qs]
     got = run(args.bin, args.model, [q for q, _ in pairs])
     report("trained questions", [(q, a, g) for (q, a), g in zip(pairs, got)])
 
@@ -50,7 +50,7 @@ def main():
     got_h = run(args.bin, args.model, [q for q, _ in held])
     ok, n = report("held-out", [(q, a, g) for (q, a), g in zip(held, got_h)])
 
-    bad = [g for g in got + got_h if len(g) > MAX_A or g.lower().startswith(FILLER)]
+    bad = [g for g in got + got_h if len(g) > MAX_A or FILLER.match(g)]
     print(f"directness violations: {len(bad)}")
     for g in bad:
         print(f"    {g!r}")

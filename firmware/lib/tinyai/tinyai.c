@@ -1,6 +1,9 @@
 // Inference for the TinyGPT in train/model.py.
-// Weights are int8 with one float scale per row; activations are quantized
-// to int8 on the fly so every matmul is an int8 x int8 -> int32 dot product.
+//
+// Weights are int4 (groups of 32 share a scale), activations are quantized
+// to int8 on the fly, and every matmul is an integer dot product. On an
+// ESP32 the weights are read straight from memory-mapped flash; flash
+// bandwidth is the bottleneck, so fewer bits per weight means faster tokens.
 #include "tinyai.h"
 
 #include <math.h>
@@ -20,7 +23,7 @@ int tai_normalize(const char *in, char *out, int out_len) {
     for (; *in && n < (int)sizeof tmp - 1; in++) {
         char c = *in;
         if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
-        if (!c || !prompt_char(c)) c = ' ';
+        if (!prompt_char(c)) c = ' ';
         if (c == ' ') {
             if (prev_space) continue;
             prev_space = 1;
@@ -41,6 +44,12 @@ int tai_normalize(const char *in, char *out, int out_len) {
 
 static int encode_char(char c) { return (c >= 32 && c <= 126) ? c - 30 : 2; }
 
+const char *tai_fact(const tai_model *m, int i) {
+    const char *f = m->facts;
+    while (i-- > 0) f += strlen(f) + 1;
+    return f;
+}
+
 // ---------------------------------------------------------------- loading
 
 typedef struct {
@@ -55,12 +64,25 @@ static const void *take(reader *r, size_t bytes) {
     return p;
 }
 
-static int take_qmat(reader *r, tai_qmat *w, int rows, int cols) {
+static int take_q8(reader *r, tai_q8 *w, int rows, int cols) {
     w->rows = rows;
     w->cols = cols;
     w->q = (const int8_t *)take(r, (size_t)rows * cols);
     w->s = (const float *)take(r, (size_t)rows * 4);
     return w->q && w->s ? 0 : -1;
+}
+
+static int take_q4(reader *r, tai_q4 *w, int rows, int cols) {
+    w->rows = rows;
+    w->cols = cols;
+    w->q = (const uint8_t *)take(r, (size_t)rows * cols / 2);
+    w->s = (const float *)take(r, (size_t)rows * (cols / TAI_GROUP) * 4);
+    return w->q && w->s && cols % TAI_GROUP == 0 ? 0 : -1;
+}
+
+static const char *take_strings(reader *r) {
+    const uint32_t *len = (const uint32_t *)take(r, 4);
+    return len ? (const char *)take(r, *len) : NULL;
 }
 
 static void *zalloc(size_t n) { return calloc(1, n); }
@@ -69,59 +91,62 @@ int tai_load(tai_model *m, const uint8_t *blob, size_t len) {
     memset(m, 0, sizeof *m);
     if (((uintptr_t)blob & 3) != 0) return -2;
     reader r = {blob, blob + len};
-    const uint32_t *h = (const uint32_t *)take(&r, 9 * 4);
-    if (!h || h[0] != TAI_MAGIC || h[1] != 1) return -1;
+    const uint32_t *h = (const uint32_t *)take(&r, 11 * 4);
+    if (!h || h[0] != TAI_MAGIC || h[1] != TAI_VERSION) return -1;
     m->vocab = (int)h[2];
     m->ctx = (int)h[3];
     m->dim = (int)h[4];
     m->layers = (int)h[5];
     m->heads = (int)h[6];
-    m->hidden = (int)h[7];
-    m->n_known = (int)h[8];
-    int D = m->dim, H = m->hidden;
+    m->kv_heads = (int)h[7];
+    m->hidden = (int)h[8];
+    m->n_facts = (int)h[9];
+    m->n_known = (int)h[10];
+    int D = m->dim, H = m->hidden, KV = m->kv_heads * (D / m->heads);
 
-    if (take_qmat(&r, &m->tok, m->vocab, D) || take_qmat(&r, &m->pos, m->ctx, D)) return -1;
+    if (take_q8(&r, &m->tok, m->vocab, D) || take_q8(&r, &m->pos, m->ctx, D)) return -1;
     m->layer = (tai_layer *)zalloc(sizeof(tai_layer) * (size_t)m->layers);
     if (!m->layer) return -3;
     for (int l = 0; l < m->layers; l++) {
         tai_layer *L = &m->layer[l];
         L->n1 = (const float *)take(&r, (size_t)D * 4);
-        if (!L->n1 || take_qmat(&r, &L->wq, D, D) || take_qmat(&r, &L->wk, D, D) ||
-            take_qmat(&r, &L->wv, D, D) || take_qmat(&r, &L->wo, D, D))
+        if (!L->n1 || take_q4(&r, &L->wq, D, D) || take_q4(&r, &L->wk, KV, D) ||
+            take_q4(&r, &L->wv, KV, D) || take_q4(&r, &L->wo, D, D))
             return -1;
         L->n2 = (const float *)take(&r, (size_t)D * 4);
-        if (!L->n2 || take_qmat(&r, &L->w1, H, D) || take_qmat(&r, &L->w2, D, H)) return -1;
+        if (!L->n2 || take_q4(&r, &L->w1, H, D) || take_q4(&r, &L->w2, D, H)) return -1;
     }
     m->norm = (const float *)take(&r, (size_t)D * 4);
-    const uint32_t *klen = (const uint32_t *)take(&r, 4);
-    if (!m->norm || !klen) return -1;
-    m->known = (const char *)take(&r, *klen);
-    if (!m->known) return -1;
+    m->facts = take_strings(&r);
+    m->known = take_strings(&r);
+    m->known_fact = (const uint16_t *)take(&r, (size_t)m->n_known * 2);
+    if (!m->norm || !m->facts || !m->known || !m->known_fact) return -1;
 
     int big = H > D ? H : D;
     m->x = (float *)zalloc((size_t)D * 4);
     m->xb = (float *)zalloc((size_t)D * 4);
     m->q = (float *)zalloc((size_t)D * 4);
-    m->k = (float *)zalloc((size_t)D * 4);
-    m->v = (float *)zalloc((size_t)D * 4);
+    m->k = (float *)zalloc((size_t)KV * 4);
+    m->v = (float *)zalloc((size_t)KV * 4);
     m->hb = (float *)zalloc((size_t)big * 4);
     m->att = (float *)zalloc((size_t)m->ctx * 4);
     m->logits = (float *)zalloc((size_t)m->vocab * 4);
     m->xq = (int8_t *)zalloc((size_t)big);
+    m->xsum = (int32_t *)zalloc((size_t)(big / TAI_GROUP + 1) * 4);
     m->kc = (int8_t **)zalloc(sizeof(int8_t *) * (size_t)m->layers);
     m->vc = (int8_t **)zalloc(sizeof(int8_t *) * (size_t)m->layers);
     m->ks = (float **)zalloc(sizeof(float *) * (size_t)m->layers);
     m->vs = (float **)zalloc(sizeof(float *) * (size_t)m->layers);
     if (!m->x || !m->xb || !m->q || !m->k || !m->v || !m->hb || !m->att || !m->logits || !m->xq ||
-        !m->kc || !m->vc || !m->ks || !m->vs)
+        !m->xsum || !m->kc || !m->vc || !m->ks || !m->vs)
         return -3;
     // KV cache is int8 too: one allocation per layer keeps each block small
     // enough for the ESP32's fragmented heap.
     for (int l = 0; l < m->layers; l++) {
-        m->kc[l] = (int8_t *)zalloc((size_t)m->ctx * D);
-        m->vc[l] = (int8_t *)zalloc((size_t)m->ctx * D);
-        m->ks[l] = (float *)zalloc((size_t)m->ctx * m->heads * 4);
-        m->vs[l] = (float *)zalloc((size_t)m->ctx * m->heads * 4);
+        m->kc[l] = (int8_t *)zalloc((size_t)m->ctx * KV);
+        m->vc[l] = (int8_t *)zalloc((size_t)m->ctx * KV);
+        m->ks[l] = (float *)zalloc((size_t)m->ctx * m->kv_heads * 4);
+        m->vs[l] = (float *)zalloc((size_t)m->ctx * m->kv_heads * 4);
         if (!m->kc[l] || !m->vc[l] || !m->ks[l] || !m->vs[l]) return -3;
     }
     return 0;
@@ -137,7 +162,7 @@ void tai_free(tai_model *m) {
         }
     free(m->kc); free(m->vc); free(m->ks); free(m->vs);
     free(m->x); free(m->xb); free(m->q); free(m->k); free(m->v);
-    free(m->hb); free(m->att); free(m->logits); free(m->xq); free(m->layer);
+    free(m->hb); free(m->att); free(m->logits); free(m->xq); free(m->xsum); free(m->layer);
     memset(m, 0, sizeof *m);
 }
 
@@ -163,21 +188,53 @@ static float quantize(int8_t *q, const float *x, int n) {
     return s;
 }
 
-static int32_t dot8(const int8_t *a, const int8_t *b, int n) {
-    int32_t acc = 0;
-    for (int i = 0; i < n; i++) acc += (int32_t)a[i] * b[i];
-    return acc;
+// Quantizes the matmul input once; the per-group sums let the int4 kernel
+// use unsigned nibbles: sum((w - 8) * x) = sum(w * x) - 8 * sum(x).
+static void set_input(tai_model *m, const float *x, int n) {
+    m->xs = quantize(m->xq, x, n);
+    for (int g = 0; g < n / TAI_GROUP; g++) {
+        int32_t s = 0;
+        for (int i = 0; i < TAI_GROUP; i++) s += m->xq[g * TAI_GROUP + i];
+        m->xsum[g] = s;
+    }
 }
 
-// o = W x, with x already quantized in m->xq / m->xs
-static void matmul(float *o, const tai_model *m, const tai_qmat *w) {
-    for (int r = 0; r < w->rows; r++)
-        o[r] = (float)dot8(w->q + (size_t)r * w->cols, m->xq, w->cols) * w->s[r] * m->xs;
+// Every block in the model file is 4-byte aligned, and so is each int4 row
+// (cols/2 bytes, cols a multiple of 32). Saying so lets GCC emit a single
+// 32-bit load instead of four byte loads.
+#if defined(__GNUC__)
+#define ALIGNED4(p) __builtin_assume_aligned((p), 4)
+#else
+#define ALIGNED4(p) (p)
+#endif
+
+// o = W x for int4 W, with x already set by set_input().
+static void matmul4(float *o, const tai_model *m, const tai_q4 *w) {
+    int groups = w->cols / TAI_GROUP;
+    const uint8_t *p = w->q;
+    const float *s = w->s;
+    for (int r = 0; r < w->rows; r++) {
+        const int8_t *x = m->xq;
+        float acc = 0;
+        for (int g = 0; g < groups; g++, s++) {
+            int32_t dot = 0;
+            for (int i = 0; i < TAI_GROUP / 8; i++, p += 4, x += 8) {
+                uint32_t b;
+                memcpy(&b, ALIGNED4(p), 4);  // one flash read for 8 weights
+                dot += (int32_t)(b & 15) * x[0] + (int32_t)((b >> 4) & 15) * x[1] +
+                       (int32_t)((b >> 8) & 15) * x[2] + (int32_t)((b >> 12) & 15) * x[3] +
+                       (int32_t)((b >> 16) & 15) * x[4] + (int32_t)((b >> 20) & 15) * x[5] +
+                       (int32_t)((b >> 24) & 15) * x[6] + (int32_t)(b >> 28) * x[7];
+            }
+            acc += (float)(dot - 8 * m->xsum[g]) * *s;
+        }
+        o[r] = acc * m->xs;
+    }
 }
 
-static void qmm(float *o, tai_model *m, const float *x, const tai_qmat *w) {
-    m->xs = quantize(m->xq, x, w->cols);
-    matmul(o, m, w);
+static void mm4(float *o, tai_model *m, const float *x, const tai_q4 *w) {
+    set_input(m, x, w->cols);
+    matmul4(o, m, w);
 }
 
 static float gelu(float x) {
@@ -198,7 +255,8 @@ static void softmax(float *x, int n) {
 // ---------------------------------------------------------------- forward
 
 static void forward(tai_model *m, int token, int pos) {
-    int D = m->dim, H = m->hidden, NH = m->heads, hd = D / NH;
+    int D = m->dim, H = m->hidden, NH = m->heads, NKV = m->kv_heads, hd = D / NH;
+    int KV = NKV * hd, rep = NH / NKV;
     const int8_t *te = m->tok.q + (size_t)token * D, *pe = m->pos.q + (size_t)pos * D;
     float ts = m->tok.s[token], ps = m->pos.s[pos];
     for (int i = 0; i < D; i++) m->x[i] = te[i] * ts + pe[i] * ps;
@@ -206,48 +264,55 @@ static void forward(tai_model *m, int token, int pos) {
     for (int l = 0; l < m->layers; l++) {
         const tai_layer *L = &m->layer[l];
         rmsnorm(m->xb, m->x, L->n1, D);
-        m->xs = quantize(m->xq, m->xb, D);
-        matmul(m->q, m, &L->wq);
-        matmul(m->k, m, &L->wk);
-        matmul(m->v, m, &L->wv);
-        for (int h = 0; h < NH; h++) {
-            size_t off = (size_t)pos * D + (size_t)h * hd;
-            m->ks[l][pos * NH + h] = quantize(m->kc[l] + off, m->k + h * hd, hd);
-            m->vs[l][pos * NH + h] = quantize(m->vc[l] + off, m->v + h * hd, hd);
+        set_input(m, m->xb, D);
+        matmul4(m->q, m, &L->wq);
+        matmul4(m->k, m, &L->wk);
+        matmul4(m->v, m, &L->wv);
+        for (int h = 0; h < NKV; h++) {
+            size_t off = (size_t)pos * KV + (size_t)h * hd;
+            m->ks[l][pos * NKV + h] = quantize(m->kc[l] + off, m->k + h * hd, hd);
+            m->vs[l][pos * NKV + h] = quantize(m->vc[l] + off, m->v + h * hd, hd);
         }
         float scale = 1.0f / sqrtf((float)hd);
         for (int h = 0; h < NH; h++) {
+            int kvh = h / rep;  // grouped-query attention: heads share K/V
             const float *q = m->q + h * hd;
             for (int t = 0; t <= pos; t++) {
-                const int8_t *k = m->kc[l] + (size_t)t * D + h * hd;
+                const int8_t *k = m->kc[l] + (size_t)t * KV + kvh * hd;
                 float s = 0;
                 for (int i = 0; i < hd; i++) s += q[i] * k[i];
-                m->att[t] = s * m->ks[l][t * NH + h] * scale;
+                m->att[t] = s * m->ks[l][t * NKV + kvh] * scale;
             }
             softmax(m->att, pos + 1);
             float *o = m->xb + h * hd;
             for (int i = 0; i < hd; i++) o[i] = 0;
             for (int t = 0; t <= pos; t++) {
-                const int8_t *v = m->vc[l] + (size_t)t * D + h * hd;
-                float a = m->att[t] * m->vs[l][t * NH + h];
+                const int8_t *v = m->vc[l] + (size_t)t * KV + kvh * hd;
+                float a = m->att[t] * m->vs[l][t * NKV + kvh];
                 for (int i = 0; i < hd; i++) o[i] += a * v[i];
             }
         }
-        qmm(m->q, m, m->xb, &L->wo);  // m->q reused as scratch
+        mm4(m->q, m, m->xb, &L->wo);  // m->q reused as scratch
         for (int i = 0; i < D; i++) m->x[i] += m->q[i];
 
         rmsnorm(m->xb, m->x, L->n2, D);
-        qmm(m->hb, m, m->xb, &L->w1);
+        mm4(m->hb, m, m->xb, &L->w1);
         for (int i = 0; i < H; i++) m->hb[i] = gelu(m->hb[i]);
-        qmm(m->xb, m, m->hb, &L->w2);
+        mm4(m->xb, m, m->hb, &L->w2);
         for (int i = 0; i < D; i++) m->x[i] += m->xb[i];
     }
     rmsnorm(m->xb, m->x, m->norm, D);
-    qmm(m->logits, m, m->xb, &m->tok);  // output head tied to the embedding
+    // Output head tied to the int8 embedding.
+    for (int v = 0; v < m->vocab; v++) {
+        const int8_t *e = m->tok.q + (size_t)v * D;
+        float s = 0;
+        for (int i = 0; i < D; i++) s += e[i] * m->xb[i];
+        m->logits[v] = s * m->tok.s[v];
+    }
 }
 
 static void generate_normalized(tai_model *m, const char *norm, char *out, int out_len) {
-    int pos = 0, n = 0, tok = 0;
+    int pos = 0, n = 0, tok;
     for (const char *c = norm; *c && pos < m->ctx - 1; c++) forward(m, encode_char(*c), pos++);
     tok = TAI_SEP;
     // Greedy decoding: the most likely answer, every time. No sampling, no
@@ -285,10 +350,13 @@ int tai_ask(tai_model *m, const char *question, char *out, int out_len) {
         return 2;
     }
     if (tai_calc(norm, out, out_len)) return 1;
-    if (!tai_gate(m, norm)) {
+    int fact = tai_gate(m, norm);
+    if (!fact) {
         copy_out(out, out_len, "I don't know.");
         return 2;
     }
-    generate_normalized(m, norm, out, out_len);
+    // The model answers the canonical question the gate matched, not the raw
+    // text: it only ever sees inputs it was trained on.
+    generate_normalized(m, tai_fact(m, fact - 1), out, out_len);
     return 0;
 }

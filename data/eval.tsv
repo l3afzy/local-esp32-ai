@@ -40,27 +40,56 @@ who created the python language	Guido van Rossum.
 who invented the telephone?	Alexander Graham Bell.
 hello there	Hello.
 thanks	You're welcome.
+# answerable since the fact set grew
+capital of bolivia?	Sucre; La Paz is the seat of government.
+mongolia capital	Ulaanbaatar.
+how heavy is a horse	380 to 1,000 kg.
+centipede legs	30 to 354, never exactly 100.
+who is the author of war and peace	Leo Tolstoy.
+who painted The Scream?	Edvard Munch.
+when did the french revolution begin	1789.
+symbol for lead	Pb.
+how far is jupiter from the sun	5.2 AU, about 778 million km.
+how many people live in tokyo	About 37 million in the metro area.
+what's the weather like today	I have no weather data.
+iron melting point	1,538 C.
+what is the capital of iceland	Reykjavik.
+capital of ireland	Dublin.
+what is the capital of guinea	Conakry.
+capital of guinea bissau	Bissau.
+what is the capital of sudan	Khartoum.
+capital of south sudan	Juba.
+capital of virginia	Richmond.
+capital of west virginia	Charleston.
+whats the capital of niger	Niamey.
+capital of nigeria	Abuja.
+how many moons does earth have	1.
+what element is fe	Iron.
+atomic number of gold	79.
+who invented the radio?	Guglielmo Marconi, with others.
+what is a baby horse called	A foal.
+what port does ssh use	22.
+esp32 deep sleep current	About 10 uA.
 # must refuse
-what is the capital of bolivia	I don't know.
-what is the capital of mongolia	I don't know.
-how much does a horse weigh	I don't know.
-how fast can a horse run	I don't know.
-how many legs does a centipede have	I don't know.
-who wrote war and peace	I don't know.
-who painted the scream	I don't know.
-when did the french revolution start	I don't know.
-what is the chemical symbol for lead	I don't know.
-how far is jupiter	I don't know.
 what is 12 in binary	I don't know.
 who is the president of france	I don't know.
-what is the weather tomorrow	I don't know.
 what is quantum entanglement	I don't know.
 how do i bake a cake	I don't know.
-what is the population of tokyo	I don't know.
 how many moons does jupiter have	I don't know.
 what is the stock price of apple	I don't know.
 who won the world cup	I don't know.
-what is the melting point of iron	I don't know.
+what is the capital of wakanda	I don't know.
+how much does a moose weigh	I don't know.
+how fast can a kangaroo run	I don't know.
+how many legs does a millipede have	I don't know.
+who painted sunflowers	I don't know.
+when did the vietnam war end	I don't know.
+what is the chemical symbol for bismuth	I don't know.
+what is the population of bolivia	I don't know.
+what is the melting point of silver	I don't know.
+how long do crocodiles live	I don't know.
+who wrote the bible	I don't know.
+how far is pluto	I don't know.
 # calculator
 what is 12 times 7	84
 12*7	84
@@ -70,3 +99,7 @@ what is 2^10	1024
 100 divided by 8	12.5
 what is 7 minus 10	-3
 1/0	Undefined, division by zero.
+square root of 144	12
+what is 5 squared	25
+sqrt 2	1.41421
+what is the square root of 81	9

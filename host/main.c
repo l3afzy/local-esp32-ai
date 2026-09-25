@@ -70,9 +70,7 @@ int main(int argc, char **argv) {
             char norm[TAI_MAX_Q + 1];
             tai_normalize(line, norm, sizeof norm);
             int g = tai_gate(&m, norm);
-            const char *k = m.known;
-            for (int i = 1; i < g; i++) k += strlen(k) + 1;
-            printf("\t[%s] -> [%s]", norm, g ? k : "-");
+            printf("\t[%s] -> [%s]", norm, g ? tai_fact(&m, g - 1) : "-");
         }
         printf("\n");
         fflush(stdout);
