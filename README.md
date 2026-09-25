@@ -3,6 +3,8 @@
 A language model that runs entirely on an ESP32. No Wi-Fi, no cloud, no API.
 It answers directly: the answer, nothing else.
 
+> **It might make a mistake.** It was tested carefully (see [Test questions it never trained on](#test-questions-it-never-trained-on)), but no test covers every way a question can be asked. Double-check anything that matters, especially health, safety and money. In an emergency, call your local emergency number.
+
 ```
 you: how much does a hummingbird weigh
 esp: Between 2 and 20 grams.
@@ -178,16 +180,39 @@ Scored by `train/evaluate.py`, which runs the real C engine (the same code the E
 
 | Test | Score |
 |---|---|
-| Every trained phrasing | 8,692 / 8,692 |
-| Held-out questions answered from knowledge | 174 / 174 |
-| ...including traps (Iceland vs Ireland, Guinea vs Guinea-Bissau, Sudan vs South Sudan, Fahrenheit→Celsius vs Celsius→Fahrenheit) | all correct |
-| Held-out computed questions (math, money, units, times, time zones, dates, BMI) | 87 / 87 |
-| Unknown topics that must be refused ("what time is it in tokyo", "how many calories are in a big mac") | 38 / 38 |
-| Second everyday batch, written after tuning and never tuned on: before fixes | 75 / 85, 0 wrong answers |
+| Every trained phrasing (8,692 questions the gate was built from) | 8,692 / 8,692 |
+| [Test questions it never trained on](#test-questions-it-never-trained-on) | 299 / 299 |
 | Gate index parses like the C gate | 8,691 / 8,691 |
 | Answers over 48 chars or starting with filler | 0 |
 
 Speed on a laptop CPU: about 15 ms per model answer, 0.3 ms to refuse, and effectively instant for computed answers.
+
+### Test questions it never trained on
+
+`data/eval.tsv` holds 299 questions that are not in the training data. Each is typed as a person would (missing apostrophes, no capitals, extra words, typos) and has one exact expected answer. The C engine must produce that answer character for character: a close answer counts as wrong.
+
+| Group | What it checks | Score |
+|---|---|---|
+| Rephrased general facts | the same fact asked differently: "France capital", "hummingbird weight", "who painted The Scream?" | 83 / 83 |
+| ...look-alike traps inside that group | picking the right one of two similar facts: Iceland vs Ireland, Guinea vs Guinea-Bissau, Sudan vs South Sudan, Niger vs Nigeria, Virginia vs West Virginia, Fahrenheit→Celsius vs Celsius→Fahrenheit | all correct |
+| Calculator and conversions | "(3+4)*5", "1/0", "sqrt 2", "10 km in miles", "1994 in roman numerals", "is 91 prime" | 22 / 22 |
+| Must refuse | questions with no fact behind them, which must get `I don't know.` rather than a guess: "how many moons does jupiter have", "who won the world cup", "how far is pluto" | 19 / 19 |
+| Everyday questions, batch 1 | "whats the safe temp for chicken", "15% tip on 42.50", "my wifi isn't working", "when's mothers day", plus 10 that must be refused ("what time is it in tokyo", "how many calories are in a big mac") | 90 / 90 |
+| Everyday questions, batch 2 | 85 more, written only *after* batch 1 was tuned, to measure honestly: see below | 85 / 85 |
+| **Total** | | **299 / 299** |
+
+By kind of answer, across all groups: 174 answered from stored knowledge, 87 computed, 38 correctly refused.
+
+**What "never trained on" means, precisely.** The model never saw any of these questions. The knowledge gate, the part that decides which fact a question is about, was adjusted while looking at test results:
+- **Batch 1** (90 everyday questions) was used to tune it, from 71 to 90 routed correctly. After that tuning it is a regression test, not an unbiased measure.
+- **Batch 2** (85 questions) was written after that tuning and run *before* any change. That first honest score was **75 / 85, with 0 wrong answers**: all 10 misses were `I don't know.`. Their general causes were then fixed, for example plurals like "emergencies" and synonyms like detector/alarm. So batch 2 now shows 85/85: 84 answered, plus "is chicken safe at 165", which it declines to guess and which is recorded as the expected refusal.
+- The honest takeaway: **on new everyday questions, expect about 9 in 10 to be answered and the rest to be `I don't know.`** In every test so far, when it was unsure it declined rather than giving a wrong answer. It can still be wrong, as below.
+
+**How it can still be wrong:**
+- **Unusual phrasing** can match a similar but different fact. The gate checks words, question type and coverage, but it matches words, not meaning. Two such cases were found and fixed ("how far is pluto" → "A dwarf planet."; "how many compressions for cpr" → the depth answer). Others likely exist that no test has hit yet.
+- **Facts can be outdated or simplified.** Populations, currencies and guidelines change, and a 48-character answer leaves out detail. Some answers are US-specific (US cups, gallons and tons; 911; tipping norms) and say so where it matters.
+- **Computations assume the obvious reading.** "ton" and "gallon" are US units unless stated, and generic US time zones won't convert to UTC because daylight saving changes the offset.
+- **Speed on a physical board hasn't been measured,** only correctness in the emulator.
 
 ### Verified on ESP32 firmware
 

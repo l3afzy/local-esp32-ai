@@ -64,6 +64,7 @@ void setup() {
     Serial.printf("\ntinyai ready: %d facts, %u KB model, %d cores, %u KB heap free\n",
                   model.n_facts, model_data_len / 1024, cores,
                   (unsigned)(ESP.getFreeHeap() / 1024));
+    Serial.println("Short, direct answers. It might make a mistake: double-check anything important.");
     Serial.print("you: ");
 }
 
