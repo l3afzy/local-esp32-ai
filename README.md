@@ -51,18 +51,18 @@ Directness is enforced at every layer, not just requested in a prompt:
 6. **Knowledge gate** (`gate.c`). A tiny model can't tell what it doesn't know. Ask for a capital it never saw and it will invent one. The gate checks the question against every phrasing the model was trained on. It tolerates typos, plurals, split words ("humming bird") and filler, and it requires the question type to agree: a "how many" question never gets a "what" answer. With no match, the answer is `I don't know.`
 7. **Calculator** (`calc.c`). Arithmetic goes to a parser, not the model: `12*7`, `15% of 80`, `2^10`, `square root of 144`, `5 squared`.
 
-## The optimizations that fit 1,089 facts in 500 KB
+## The optimizations that fit 1,089 facts in 494 KB
 
 | | Before | After |
 |---|---|---|
 | Facts | 309 | **1,089** |
-| Model in flash | 720 KB | **REPLACE_SIZE** |
+| Model in flash | 720 KB | **494 KB** |
 | Weight format | int8 | **int4**, groups of 32, quantization-aware training |
 | Attention | 4 K/V heads | **2 K/V heads** (GQA): half the KV cache |
 | KV cache (RAM) | 98 KB | **49 KB** |
 | Prompt the model sees | raw user text | **canonical question** from the gate |
-| Trained questions correct | 622/640 (97%) | **REPLACE_TRAINED** |
-| Held-out questions correct | 58/68 (85%) | **REPLACE_HELDOUT** |
+| Trained questions correct | 622/640 (97%) | **2,416/2,416 (100%)** |
+| Held-out questions correct | 58/68 (85%) | **100/100 (100%)** |
 
 - **Retrieval-canonical prompts.** This matters most. The old model had to map every typo and rephrasing to an answer, which spent capacity on noise and still failed on paraphrases ("France capital" → "Beijing."). Now the gate finds the fact and the model only ever sees that fact's canonical question. Every parameter goes to storing facts, and accuracy on the chip matches accuracy in training.
 - **int4 with quantization-aware training.** Weights are 4-bit, one fp32 scale per 32 weights: 4.5 bits per weight. For the second half of training the forward pass uses the rounded int4 weights (a straight-through estimator), so the network learns weights that survive rounding. `export.py` asserts that its rounding matches training bit for bit.
@@ -120,12 +120,25 @@ python data/more_facts.py > data/facts_generated.tsv
 | Architecture | GPT: 4 layers, dim 128, 4 query heads / 2 K/V heads, MLP 384, context 96, tied embeddings |
 | Parameters | 615,680 |
 | Knowledge | 1,089 facts, 2,415 accepted phrasings |
-| Model in flash | REPLACE_SIZE (int4 weights, int8 embeddings, fact tables) |
+| Model in flash | 494 KB (int4 weights, int8 embeddings, fact tables) |
 | RAM at runtime | about 60 KB (int8 KV cache 49 KB, activations and scales about 10 KB) |
 | Engine code | about 11 KB of Xtensa code, pure C99, no dependencies |
 | Works on | ESP32, ESP32-S3, ESP32-C3 |
 
-REPLACE_RESULTS
+## Results
+
+Scored by `train/evaluate.py`, which runs the real C engine (the same code the ESP32 runs), not the Python model:
+
+| Test | Score |
+|---|---|
+| Every trained phrasing (2,416) | 2,416 / 2,416 |
+| Held-out rephrasings the model never saw | 69 / 69 |
+| Unknown topics that must be refused | 19 / 19 |
+| ...including traps (Iceland vs Ireland, Guinea vs Guinea-Bissau, Sudan vs South Sudan) | all correct |
+| Arithmetic | 12 / 12 |
+| Answers over 48 chars or starting with filler | 0 |
+
+Speed: about 20 ms per answer on a laptop CPU. It has not been timed on a real ESP32 yet (the PlatformIO registry was unreachable from the build machine). The engine was cross-compiled with Espressif's Xtensa GCC for the ESP32 and ESP32-S3 and compiles cleanly. A rough estimate from the instruction count is 1 to 2 seconds per answer on a classic ESP32 at 240 MHz.
 
 ## Layout
 
