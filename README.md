@@ -138,7 +138,25 @@ Scored by `train/evaluate.py`, which runs the real C engine (the same code the E
 | Arithmetic | 12 / 12 |
 | Answers over 48 chars or starting with filler | 0 |
 
-Speed: about 20 ms per answer on a laptop CPU. It has not been timed on a real ESP32 yet (the PlatformIO registry was unreachable from the build machine). The engine was cross-compiled with Espressif's Xtensa GCC for the ESP32 and ESP32-S3 and compiles cleanly. A rough estimate from the instruction count is 1 to 2 seconds per answer on a classic ESP32 at 240 MHz.
+### Verified on ESP32 firmware
+
+- **Builds** with PlatformIO for all three targets:
+
+  | Board | Flash used (of 3 MB app partition) | Static RAM |
+  |---|---|---|
+  | ESP32 | 793 KB (25%) | 21.9 KB |
+  | ESP32-S3 | 789 KB (25%) | 18.8 KB |
+  | ESP32-C3 | 775 KB (25%) | 14.2 KB |
+
+- **Runs** in Espressif's ESP32 emulator (QEMU) as the real flash image: it boots, loads the model with 283 KB of heap to spare, and gives the same answers as the PC build on all 100 held-out questions.
+- **Not yet timed on physical hardware.** Emulator timings aren't real. A rough estimate from the instruction count is 1 to 2 seconds per answer on a classic ESP32 at 240 MHz; on a laptop it takes about 20 ms. To measure on a board, set `SHOW_TIMING 1` in `firmware/src/main.cpp`.
+
+Re-run the emulator check yourself (needs [Espressif's QEMU](https://github.com/espressif/qemu/releases)):
+
+```sh
+cd firmware && pio run -e esp32dev
+echo "how much does a hummingbird weigh" | python qemu_test.py --qemu path/to/qemu-system-xtensa
+```
 
 ## Layout
 
@@ -153,6 +171,7 @@ train/export.py             int4 quantization + export
 train/evaluate.py           scores the real C engine
 firmware/lib/tinyai/        inference engine, gate, calculator (C99)
 firmware/src/main.cpp       serial chat for the ESP32
+firmware/qemu_test.py       runs the built firmware in the ESP32 emulator
 host/                       PC build of the same engine
 ```
 
