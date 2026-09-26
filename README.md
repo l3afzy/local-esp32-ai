@@ -20,6 +20,19 @@ you: how do i build a raft
 esp: I don't know.
 ```
 
+## Specs
+
+| | |
+|---|---|
+| Model | 2,030,208-parameter GPT: 6 layers, dim 192, 4 heads, context 96 |
+| Weights | int4 (fp16 scales), quantization-aware trained |
+| Knowledge | 24,854 facts (197 survival), 97,490 accepted phrasings |
+| Model file | 3.0 MB in flash |
+| RAM | about 125 KB (199 KB heap still free) |
+| Boards | ESP32, ESP32-S3, ESP32-C3 with 4 MB flash |
+| Answers | 48 characters max, or `I don't know.` |
+
+
 ## What it knows
 
 - **Survival:** 197 facts on water, fire, shelter, signaling, navigation, food, cold, heat, wildlife, weather, first aid and knots, from CDC, NWS, National Park Service, Ready.gov, Red Cross, NHS, WHO and the US Army survival manual.
@@ -28,7 +41,21 @@ esp: I don't know.
 
 Anything it doesn't know gets `I don't know.` instead of a guess.
 
-**New here? Read [how to use it](docs/usage.md)**: connecting, how to ask, and what the answers mean.
+## Usage
+
+1. Flash it (below), then open a serial terminal at **115200 baud** (`pio device monitor`).
+2. Wait for `tinyai ready`, type a question, press Enter.
+3. **Keep it short.** Name the topic in a few words: `hypothermia` works, `i think my friend has hypothermia what do i do` doesn't.
+4. `I don't know.` means no matching fact: try fewer words, or it doesn't know.
+
+```
+you: purify water
+esp: Boil it for 1 minute (3 above 6,500 ft).
+you: how much water for 2 people for 5 days
+esp: 10 gallons (38 L) for 5 days.
+```
+
+More examples and tips: [docs/usage.md](docs/usage.md).
 
 ## Flash it
 
@@ -71,8 +98,6 @@ To add facts, add a line to `data/facts.tsv` or `data/facts_survival.tsv` and re
 question|another phrasing<TAB>Direct answer.
 ```
 
-## Specs
-
-2M-parameter GPT (6 layers, int4 weights), a 3.0 MB model file, about 125 KB of RAM. Built by following the [AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch) curriculum.
+Built by following the [AI Engineering from Scratch](https://github.com/rohitg00/ai-engineering-from-scratch) curriculum.
 
 How it works, how it was tested, and its limits: [docs/details.md](docs/details.md).
