@@ -4,9 +4,9 @@
     python train/train.py --steps 300    # smoke test
     python train/train.py --resume       # continue from train/ckpt.pt.partial
 
-    # the 8.7M ternary model: the most parameters that fit a 4 MB ESP32
-    python train/train.py --weights ternary --qat-from 0 --dim 384 --layers 7 \
-        --heads 6 --kv-heads 1 --tier small
+    # the 5.4M 2-bit model for 4 MB boards
+    python train/train.py --tier max4mb --weights int2 --qat-from 0 --dim 320 \
+        --layers 6 --heads 5 --kv-heads 1 --hidden 1024
 
 The model sees one canonical key per fact: its shortest phrasing. On the
 device the knowledge gate maps whatever the user typed to that key first, so
@@ -84,8 +84,8 @@ def main():
     ap.add_argument("--heads", type=int, default=4)
     ap.add_argument("--kv-heads", type=int, default=2, help="K/V heads shared by the query heads")
     ap.add_argument("--hidden", type=int, default=None, help="MLP width (default 3 x dim)")
-    ap.add_argument("--weights", default="int4", choices=["int4", "ternary"],
-                    help="int4, or ternary (1.6 bits/weight: the most parameters per byte)")
+    ap.add_argument("--weights", default="int4", choices=["int4", "int2", "ternary"],
+                    help="bits per weight: int4 (4.5), int2 (2.5) or ternary (1.6)")
     ap.add_argument("--resume", action="store_true", help="continue from <out>.partial")
     ap.add_argument("--check-every", type=int, default=2000, help="sampled exact-match check")
     ap.add_argument("--seed", type=int, default=1337)

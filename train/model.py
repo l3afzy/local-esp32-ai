@@ -4,9 +4,9 @@ Same math as firmware/lib/tinyai/tinyai.c: learned positions, pre-RMSNorm,
 grouped-query causal attention, GELU MLP, output head tied to the embedding.
 No biases anywhere — fewer tensors to ship and quantize.
 
-Linear weights ship as int4 (groups of 32 with an fp16 scale) or, to fit the
-most parameters in 4 MB of flash, ternary: -1, 0 or +1 times one fp16 scale
-per row (BitNet b1.58), 1.6 bits per weight. With quantization-aware training
+Linear weights ship as int4 or int2 (groups of 32 with an fp16 scale: 4.5 or
+2.5 bits per weight), or ternary: -1, 0 or +1 times one fp16 scale per row
+(BitNet b1.58), 1.6 bits per weight. With quantization-aware training
 on, training sees exactly those rounded weights, so the network learns to be
 accurate *after* quantization."""
 
@@ -29,7 +29,7 @@ class Config:
     heads: int = 4
     kv_heads: int = 2
     hidden: int = 576
-    weights: str = "int4"  # or "ternary"
+    weights: str = "int4"  # or "int2", "ternary"
 
 
 def quantize_int4(w):
@@ -48,7 +48,16 @@ def quantize_ternary(w):
     return torch.clamp(torch.round(w / scale), -1, 1) * scale
 
 
-QUANTIZERS = {"int4": quantize_int4, "ternary": quantize_ternary}
+def quantize_int2(w):
+    """2 bits: -1.5, -0.5, +0.5 or +1.5 times an fp16 scale per 32 weights.
+    Matches train/export.py and the C engine."""
+    out, cols = w.shape
+    g = w.reshape(out, cols // GROUP, GROUP)
+    scale = (g.abs().amax(-1, keepdim=True) / 1.5).clamp(min=6.2e-5).half().float()
+    return ((torch.clamp(torch.floor(g / scale), -2, 1) + 0.5) * scale).reshape(out, cols)
+
+
+QUANTIZERS = {"int4": quantize_int4, "int2": quantize_int2, "ternary": quantize_ternary}
 
 
 class QLinear(nn.Linear):

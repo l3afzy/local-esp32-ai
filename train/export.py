@@ -6,7 +6,7 @@ Writes:
     firmware/data/model.bin        the model; the host build loads it and the firmware
                                    embeds it in flash (firmware/embed_model.py)
 
-File layout, version 4 (int4 weights) or 5 (ternary weights), little endian,
+File layout, version 4 (int4 weights), 5 (ternary) or 6 (int2), little endian,
 every block padded to 4 bytes:
     u32 magic "TAI1", version, vocab, ctx, dim, layers, heads, kv_heads,
         hidden, n_facts, n_known
@@ -14,6 +14,9 @@ every block padded to 4 bytes:
     per layer:    n1 f32[dim], wq wk wv wo (int4), n2 f32[dim], w1 w2 (int4)
                   int4 = [rows*cols/2] bytes, two weights per byte, low
                   nibble first, stored +8; then f16 [rows*cols/32] scales
+                  int2 = [rows*cols/4] bytes, four weights per byte, first in
+                  the lowest 2 bits, stored +2 (value = stored - 1.5); then
+                  f16 [rows*cols/32] scales
                   ternary = [rows*ceil(cols/5)] bytes, five weights per byte
                   in base 3, first in the lowest digit, stored +1; then
                   f16 [rows] scales
@@ -39,7 +42,7 @@ import torch
 import engine
 import gate_index
 from common import canonical, load_facts, normalize
-from model import GROUP, quantize_int4, quantize_ternary
+from model import GROUP, quantize_int2, quantize_int4, quantize_ternary
 
 
 def pad4(b):
@@ -64,6 +67,19 @@ def q4(w):
                        quantize_int4(w.detach().float()))
     n = (q + 8).numpy().astype(np.uint8)
     packed = (n[:, 0::2] | (n[:, 1::2] << 4)).astype(np.uint8)
+    return pad4(packed.tobytes()) + pad4(scale.reshape(-1).numpy().astype("<f2").tobytes())
+
+
+def q2(w):
+    """int2 with the exact rounding QAT trained against: 4 weights per byte,
+    first in the lowest 2 bits, stored +2; then one fp16 scale per 32."""
+    rows, cols = w.shape
+    g = w.detach().float().reshape(rows, cols // GROUP, GROUP)
+    scale = (g.abs().amax(-1, keepdim=True) / 1.5).clamp(min=6.2e-5).half().float()
+    q = torch.clamp(torch.floor(g / scale), -2, 1)
+    assert torch.equal(((q + 0.5) * scale).reshape(rows, cols), quantize_int2(w.detach().float()))
+    u = (q + 2).to(torch.uint8).reshape(rows, cols // 4, 4).numpy()
+    packed = (u[..., 0] | (u[..., 1] << 2) | (u[..., 2] << 4) | (u[..., 3] << 6)).astype(np.uint8)
     return pad4(packed.tobytes()) + pad4(scale.reshape(-1).numpy().astype("<f2").tobytes())
 
 
@@ -137,9 +153,9 @@ def main():
             known.setdefault(normalize(q), i)  # first fact wins a shared phrasing
     assert len(facts) < 65536
 
-    ternary = c.get("weights", "int4") == "ternary"
-    qw = qt if ternary else q4
-    out = [struct.pack("<11I", 0x31494154, 5 if ternary else 4, c["vocab"], c["ctx"], c["dim"], c["layers"],
+    kind = c.get("weights", "int4")
+    qw, version = {"int4": (q4, 4), "ternary": (qt, 5), "int2": (q2, 6)}[kind]
+    out = [struct.pack("<11I", 0x31494154, version, c["vocab"], c["ctx"], c["dim"], c["layers"],
                        c["heads"], c["kv_heads"], c["hidden"], len(facts), len(known)),
            q8(sd["tok.weight"]), q8(sd["pos.weight"])]
     for l in range(c["layers"]):

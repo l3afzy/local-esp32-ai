@@ -72,14 +72,19 @@ static int take_q8(reader *r, tai_q8 *w, int rows, int cols) {
     return w->q && w->s ? 0 : -1;
 }
 
-static int ternary_file;  // set by tai_load from the file version
+static int file_kind;  // the file version, set by tai_load: the weight format
 static void init_trits(void);
 
 static int take_q4(reader *r, tai_q4 *w, int rows, int cols) {
     w->rows = rows;
     w->cols = cols;
-    w->ternary = ternary_file;
-    if (w->ternary) {
+    w->kind = file_kind;
+    if (w->kind == TAI_VERSION_INT2) {
+        w->q = (const uint8_t *)take(r, (size_t)rows * cols / 4);
+        w->s = (const uint16_t *)take(r, (size_t)rows * (cols / TAI_GROUP) * 2);
+        return w->q && w->s && cols % TAI_GROUP == 0 ? 0 : -1;
+    }
+    if (w->kind == TAI_VERSION_TERNARY) {
         w->q = (const uint8_t *)take(r, (size_t)rows * ((cols + 4) / 5));
         w->s = (const uint16_t *)take(r, (size_t)rows * 2);
         return w->q && w->s ? 0 : -1;
@@ -101,8 +106,10 @@ int tai_load(tai_model *m, const uint8_t *blob, size_t len) {
     if (((uintptr_t)blob & 3) != 0) return -2;
     reader r = {blob, blob + len};
     const uint32_t *h = (const uint32_t *)take(&r, 11 * 4);
-    if (!h || h[0] != TAI_MAGIC || (h[1] != TAI_VERSION && h[1] != TAI_VERSION_TERNARY)) return -1;
-    ternary_file = h[1] == TAI_VERSION_TERNARY;
+    if (!h || h[0] != TAI_MAGIC ||
+        (h[1] != TAI_VERSION && h[1] != TAI_VERSION_TERNARY && h[1] != TAI_VERSION_INT2))
+        return -1;
+    file_kind = (int)h[1];
     init_trits();
     m->vocab = (int)h[2];
     m->ctx = (int)h[3];
@@ -311,9 +318,35 @@ static void matmul3_rows(void *ctx, int lo, int hi) {
     }
 }
 
+// Rows [lo, hi) of o = W x for int2 W. Stored u = 0..3 means u - 1.5, so
+// sum((u - 1.5) * x) = (2 * sum(u * x) - 3 * sum(x)) / 2.
+static void matmul2_rows(void *ctx, int lo, int hi) {
+    const mm_job *j = (const mm_job *)ctx;
+    const tai_q4 *w = j->w;
+    int groups = w->cols / TAI_GROUP;
+    const uint8_t *p = w->q + (size_t)lo * (w->cols / 4);
+    const uint16_t *s = w->s + (size_t)lo * groups;
+    for (int r = lo; r < hi; r++) {
+        const int8_t *x = j->m->xq;
+        float acc = 0;
+        for (int g = 0; g < groups; g++, s++) {
+            int32_t dot = 0;
+            for (int i = 0; i < TAI_GROUP / 16; i++, p += 4, x += 16) {
+                uint32_t b;
+                memcpy(&b, ALIGNED4(p), 4);  // one flash read for 16 weights
+                for (int k = 0; k < 16; k++) dot += (int32_t)((b >> (2 * k)) & 3) * x[k];
+            }
+            acc += (float)(2 * dot - 3 * j->m->xsum[g]) * 0.5f * half_to_float(*s);
+        }
+        j->o[r] = acc * j->m->xs;
+    }
+}
+
 static void matmul4(float *o, const tai_model *m, const tai_q4 *w) {
     mm_job j = {o, m, w};
-    tai_job rows = w->ternary ? matmul3_rows : matmul4_rows;
+    tai_job rows = w->kind == TAI_VERSION_TERNARY ? matmul3_rows
+                   : w->kind == TAI_VERSION_INT2  ? matmul2_rows
+                                                  : matmul4_rows;
     if (m->parallel && w->rows >= 32) m->parallel(rows, &j, w->rows);
     else rows(&j, 0, w->rows);
 }
