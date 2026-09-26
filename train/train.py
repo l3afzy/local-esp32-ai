@@ -89,6 +89,7 @@ def main():
     ap.add_argument("--resume", action="store_true", help="continue from <out>.partial")
     ap.add_argument("--check-every", type=int, default=2000, help="sampled exact-match check")
     ap.add_argument("--seed", type=int, default=1337)
+    ap.add_argument("--final-check", type=int, default=2000, help="facts checked at the end (0 = all)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -140,8 +141,12 @@ def main():
                         "step": step}, partial)
 
     model.eval()
-    wrong = [(canonical(qs), a) for qs, a in facts if answer(model, canonical(qs), cfg) != a]
-    print(f"exact match (int4 weights): {len(facts) - len(wrong)}/{len(facts)}")
+    # A sample: export.py checks every fact on the real C engine anyway, and
+    # a full check here takes hours on a big model.
+    final = facts if args.final_check <= 0 else random.Random(1).sample(facts, min(args.final_check, len(facts)))
+    wrong = [(canonical(qs), a) for qs, a in final if answer(model, canonical(qs), cfg) != a]
+    print(f"exact match ({cfg.weights} weights): {len(final) - len(wrong)}/{len(final)}"
+          f"{'' if final is facts else ' sampled'}")
     for q, a in wrong[:20]:
         print(f"    {q!r} -> {answer(model, q, cfg)!r}, want {a!r}")
     torch.save({"cfg": cfg.__dict__, "model": model.state_dict()}, args.out)
