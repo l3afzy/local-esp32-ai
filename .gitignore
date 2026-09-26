@@ -4,3 +4,4 @@ __pycache__/
 host/tinyai
 firmware/.pio/
 data/wikidata_cache/
+data/large/
