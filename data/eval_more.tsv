@@ -1,5 +1,5 @@
-# Extra held-out questions for the large tier (checked together with data/eval.tsv;
-# a question listed here replaces the same question there).
+# Held-out questions for the facts in data/facts_survival_more.tsv (checked together
+# with data/eval.tsv; a question listed here replaces the same question there).
 # survival, fourth batch: written before any routing check on the new facts, first score recorded
 how hard do i push for cpr on a toddler	About 2 inches (5 cm), 1 or 2 hands.
 my baby is choking what do i do	5 back blows, then 5 chest thrusts.

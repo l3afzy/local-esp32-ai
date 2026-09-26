@@ -37,8 +37,8 @@ def report(name, rows):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tier", default="small", choices=["small", "large"],
-                    help="which fact set: small (2M model, 4 MB boards) or large (13M, 16 MB ESP32-S3)")
+    ap.add_argument("--tier", default="small", choices=["small", "max4mb", "large"],
+                    help="fact set: small (2M int4), max4mb (8.7M ternary) or large (16 MB boards)")
     ap.add_argument("--bin", default="host/tinyai")
     ap.add_argument("--model", default="firmware/data/model.bin")
     ap.add_argument("--eval", nargs="*", default=None, help="default: the tier's eval files")

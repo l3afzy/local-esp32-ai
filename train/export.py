@@ -6,13 +6,17 @@ Writes:
     firmware/data/model.bin        the model; the host build loads it and the firmware
                                    embeds it in flash (firmware/embed_model.py)
 
-File layout, version 4 (little endian, every block padded to 4 bytes):
-    u32 magic "TAI1", version 4, vocab, ctx, dim, layers, heads, kv_heads,
+File layout, version 4 (int4 weights) or 5 (ternary weights), little endian,
+every block padded to 4 bytes:
+    u32 magic "TAI1", version, vocab, ctx, dim, layers, heads, kv_heads,
         hidden, n_facts, n_known
     tok, pos      int8 [rows*cols] + f32 [rows] scales
     per layer:    n1 f32[dim], wq wk wv wo (int4), n2 f32[dim], w1 w2 (int4)
                   int4 = [rows*cols/2] bytes, two weights per byte, low
                   nibble first, stored +8; then f16 [rows*cols/32] scales
+                  ternary = [rows*ceil(cols/5)] bytes, five weights per byte
+                  in base 3, first in the lowest digit, stored +1; then
+                  f16 [rows] scales
     norm          f32[dim]
     facts         u32 bytes + each fact's canonical key (shortest phrasing)
     gate index    see train/gate_index.py: word dictionary, and per accepted
@@ -35,7 +39,7 @@ import torch
 import engine
 import gate_index
 from common import canonical, load_facts, normalize
-from model import GROUP, quantize_int4
+from model import GROUP, quantize_int4, quantize_ternary
 
 
 def pad4(b):
@@ -60,6 +64,22 @@ def q4(w):
                        quantize_int4(w.detach().float()))
     n = (q + 8).numpy().astype(np.uint8)
     packed = (n[:, 0::2] | (n[:, 1::2] << 4)).astype(np.uint8)
+    return pad4(packed.tobytes()) + pad4(scale.reshape(-1).numpy().astype("<f2").tobytes())
+
+
+def qt(w):
+    """Ternary: 5 weights per byte in base 3 (first weight in the lowest digit,
+    stored +1), each row padded to whole bytes, then one fp16 scale per row."""
+    rows, cols = w.shape
+    w = w.detach().float()
+    scale = w.abs().mean(-1, keepdim=True).clamp(min=6.2e-5).half().float()
+    t = torch.clamp(torch.round(w / scale), -1, 1)
+    assert torch.equal(t * scale, quantize_ternary(w))
+    stride = -(-cols // 5)
+    u = np.zeros((rows, stride * 5), np.uint8)
+    u[:, :cols] = (t + 1).numpy().astype(np.uint8)
+    u = u.reshape(rows, stride, 5).astype(np.uint16)
+    packed = (u[..., 0] + 3 * u[..., 1] + 9 * u[..., 2] + 27 * u[..., 3] + 81 * u[..., 4]).astype(np.uint8)
     return pad4(packed.tobytes()) + pad4(scale.reshape(-1).numpy().astype("<f2").tobytes())
 
 
@@ -97,8 +117,8 @@ def write(args, data):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tier", default="small", choices=["small", "large"],
-                    help="which fact set: small (2M model, 4 MB boards) or large (13M, 16 MB ESP32-S3)")
+    ap.add_argument("--tier", default="small", choices=["small", "max4mb", "large"],
+                    help="fact set: small (2M int4), max4mb (8.7M ternary) or large (16 MB boards)")
     ap.add_argument("--ckpt", default="train/ckpt.pt")
     ap.add_argument("--bin", default="firmware/data/model.bin")
     ap.add_argument("--header", default=None, help="also write the model as a C array (optional; the firmware embeds the .bin)")
@@ -117,15 +137,17 @@ def main():
             known.setdefault(normalize(q), i)  # first fact wins a shared phrasing
     assert len(facts) < 65536
 
-    out = [struct.pack("<11I", 0x31494154, 4, c["vocab"], c["ctx"], c["dim"], c["layers"],
+    ternary = c.get("weights", "int4") == "ternary"
+    qw = qt if ternary else q4
+    out = [struct.pack("<11I", 0x31494154, 5 if ternary else 4, c["vocab"], c["ctx"], c["dim"], c["layers"],
                        c["heads"], c["kv_heads"], c["hidden"], len(facts), len(known)),
            q8(sd["tok.weight"]), q8(sd["pos.weight"])]
     for l in range(c["layers"]):
         p = f"blocks.{l}."
         out.append(f32(sd[p + "n1.w"]))
-        out += [q4(sd[p + n + ".weight"]) for n in ("wq", "wk", "wv", "wo")]
+        out += [qw(sd[p + n + ".weight"]) for n in ("wq", "wk", "wv", "wo")]
         out.append(f32(sd[p + "n2.w"]))
-        out += [q4(sd[p + n + ".weight"]) for n in ("w1", "w2")]
+        out += [qw(sd[p + n + ".weight"]) for n in ("w1", "w2")]
     out.append(f32(sd["norm.w"]))
     out.append(strings(keys))
     index, n_words = gate_index.build(list(known.items()), strict, lenient)

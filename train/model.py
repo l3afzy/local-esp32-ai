@@ -4,9 +4,11 @@ Same math as firmware/lib/tinyai/tinyai.c: learned positions, pre-RMSNorm,
 grouped-query causal attention, GELU MLP, output head tied to the embedding.
 No biases anywhere — fewer tensors to ship and quantize.
 
-Linear weights ship as int4 (groups of 32 with an fp16 scale). With
-`model.qat = True` training sees exactly those rounded weights, so the
-network learns to be accurate *after* quantization."""
+Linear weights ship as int4 (groups of 32 with an fp16 scale) or, to fit the
+most parameters in 4 MB of flash, ternary: -1, 0 or +1 times one fp16 scale
+per row (BitNet b1.58), 1.6 bits per weight. With quantization-aware training
+on, training sees exactly those rounded weights, so the network learns to be
+accurate *after* quantization."""
 
 import math
 from dataclasses import dataclass
@@ -27,6 +29,7 @@ class Config:
     heads: int = 4
     kv_heads: int = 2
     hidden: int = 576
+    weights: str = "int4"  # or "ternary"
 
 
 def quantize_int4(w):
@@ -38,15 +41,25 @@ def quantize_int4(w):
     return (torch.clamp(torch.round(g / scale), -7, 7) * scale).reshape(out, cols)
 
 
+def quantize_ternary(w):
+    """BitNet b1.58: -1, 0 or +1 times each row's mean |w| (as fp16). Matches
+    train/export.py and the C engine."""
+    scale = w.abs().mean(-1, keepdim=True).clamp(min=6.2e-5).half().float()
+    return torch.clamp(torch.round(w / scale), -1, 1) * scale
+
+
+QUANTIZERS = {"int4": quantize_int4, "ternary": quantize_ternary}
+
+
 class QLinear(nn.Linear):
     def __init__(self, i, o):
         super().__init__(i, o, bias=False)
-        self.qat = False
+        self.quant = None  # set by TinyGPT.set_qat
 
     def forward(self, x):
         w = self.weight
-        if self.qat:
-            w = w + (quantize_int4(w) - w).detach()  # straight-through estimator
+        if self.quant:
+            w = w + (self.quant(w) - w).detach()  # straight-through estimator
         return F.linear(x, w)
 
 
@@ -101,7 +114,7 @@ class TinyGPT(nn.Module):
     def set_qat(self, on):
         for m in self.modules():
             if isinstance(m, QLinear):
-                m.qat = on
+                m.quant = QUANTIZERS[self.c.weights] if on else None
 
     def forward(self, idx):
         x = self.tok(idx) + self.pos(torch.arange(idx.shape[1], device=idx.device))

@@ -18,7 +18,8 @@ extern "C" {
 #endif
 
 #define TAI_MAGIC 0x31494154u  // "TAI1"
-#define TAI_VERSION 4
+#define TAI_VERSION 4          // int4 weights
+#define TAI_VERSION_TERNARY 5  // ternary weights (-1, 0, +1), 1.6 bits each
 #define TAI_GROUP 32           // int4 weights: one scale per 32 inputs
 #define TAI_MAX_Q 64           // question chars kept, matches train/common.py
 #define TAI_MAX_A 48           // answer chars, hard cap
@@ -31,10 +32,12 @@ typedef struct {        // int8 matrix, one scale per row (embeddings)
     int rows, cols;
 } tai_q8;
 
-typedef struct {        // int4 matrix, one fp16 scale per row per 32 columns
-    const uint8_t *q;   // two weights per byte, low nibble first, stored +8
-    const uint16_t *s;  // IEEE half precision
-    int rows, cols;
+typedef struct {        // quantized weight matrix, fp16 (IEEE half) scales
+    const uint8_t *q;   // int4: two weights per byte, low nibble first, stored +8
+                        // ternary: five per byte in base 3, first weight in the
+                        // lowest digit, stored +1; rows padded to whole bytes
+    const uint16_t *s;  // int4: one per row per 32 columns; ternary: one per row
+    int rows, cols, ternary;
 } tai_q4;
 
 typedef struct {

@@ -72,9 +72,18 @@ static int take_q8(reader *r, tai_q8 *w, int rows, int cols) {
     return w->q && w->s ? 0 : -1;
 }
 
+static int ternary_file;  // set by tai_load from the file version
+static void init_trits(void);
+
 static int take_q4(reader *r, tai_q4 *w, int rows, int cols) {
     w->rows = rows;
     w->cols = cols;
+    w->ternary = ternary_file;
+    if (w->ternary) {
+        w->q = (const uint8_t *)take(r, (size_t)rows * ((cols + 4) / 5));
+        w->s = (const uint16_t *)take(r, (size_t)rows * 2);
+        return w->q && w->s ? 0 : -1;
+    }
     w->q = (const uint8_t *)take(r, (size_t)rows * cols / 2);
     w->s = (const uint16_t *)take(r, (size_t)rows * (cols / TAI_GROUP) * 2);
     return w->q && w->s && cols % TAI_GROUP == 0 ? 0 : -1;
@@ -92,7 +101,9 @@ int tai_load(tai_model *m, const uint8_t *blob, size_t len) {
     if (((uintptr_t)blob & 3) != 0) return -2;
     reader r = {blob, blob + len};
     const uint32_t *h = (const uint32_t *)take(&r, 11 * 4);
-    if (!h || h[0] != TAI_MAGIC || h[1] != TAI_VERSION) return -1;
+    if (!h || h[0] != TAI_MAGIC || (h[1] != TAI_VERSION && h[1] != TAI_VERSION_TERNARY)) return -1;
+    ternary_file = h[1] == TAI_VERSION_TERNARY;
+    init_trits();
     m->vocab = (int)h[2];
     m->ctx = (int)h[3];
     m->dim = (int)h[4];
@@ -273,10 +284,38 @@ static void matmul4_rows(void *ctx, int lo, int hi) {
     }
 }
 
+// The 243 possible bytes of packed ternary weights, decoded (-1, 0, +1).
+static int8_t trits[243][5];
+
+static void init_trits(void) {
+    for (int b = 0; b < 243; b++)
+        for (int i = 0, v = b; i < 5; i++, v /= 3) trits[b][i] = (int8_t)(v % 3 - 1);
+}
+
+// Rows [lo, hi) of o = W x for ternary W: integer adds of the int8 inputs,
+// one table lookup per 5 weights, and one scale per row.
+static void matmul3_rows(void *ctx, int lo, int hi) {
+    const mm_job *j = (const mm_job *)ctx;
+    const tai_q4 *w = j->w;
+    int stride = (w->cols + 4) / 5, full = w->cols / 5, rest = w->cols - 5 * full;
+    for (int r = lo; r < hi; r++) {
+        const uint8_t *p = w->q + (size_t)r * stride;
+        const int8_t *x = j->m->xq;
+        int32_t dot = 0;
+        for (int b = 0; b < full; b++, x += 5) {
+            const int8_t *t = trits[p[b]];
+            dot += t[0] * x[0] + t[1] * x[1] + t[2] * x[2] + t[3] * x[3] + t[4] * x[4];
+        }
+        for (int i = 0; i < rest; i++) dot += trits[p[full]][i] * x[i];
+        j->o[r] = (float)dot * half_to_float(w->s[r]) * j->m->xs;
+    }
+}
+
 static void matmul4(float *o, const tai_model *m, const tai_q4 *w) {
     mm_job j = {o, m, w};
-    if (m->parallel && w->rows >= 32) m->parallel(matmul4_rows, &j, w->rows);
-    else matmul4_rows(&j, 0, w->rows);
+    tai_job rows = w->ternary ? matmul3_rows : matmul4_rows;
+    if (m->parallel && w->rows >= 32) m->parallel(rows, &j, w->rows);
+    else rows(&j, 0, w->rows);
 }
 
 void tai_set_parallel(tai_model *m, tai_parallel_fn fn) { m->parallel = fn; }

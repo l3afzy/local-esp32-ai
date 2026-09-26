@@ -4,9 +4,9 @@
     python train/train.py --steps 300    # smoke test
     python train/train.py --resume       # continue from train/ckpt.pt.partial
 
-    # the 13M model for 16 MB ESP32-S3 boards (see README)
-    python train/train.py --tier large --dim 448 --layers 8 --heads 7 --kv-heads 1 \
-        --out train/ckpt_large.pt
+    # the 8.7M ternary model: the most parameters that fit a 4 MB ESP32
+    python train/train.py --weights ternary --qat-from 0 --dim 384 --layers 7 \
+        --heads 6 --kv-heads 1 --tier small
 
 The model sees one canonical key per fact: its shortest phrasing. On the
 device the knowledge gate maps whatever the user typed to that key first, so
@@ -72,8 +72,8 @@ def answer(model, q, cfg, max_new=48):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--tier", default="small", choices=["small", "large"],
-                    help="which fact set: small (2M model, 4 MB boards) or large (13M, 16 MB ESP32-S3)")
+    ap.add_argument("--tier", default="small", choices=["small", "max4mb", "large"],
+                    help="fact set: small (2M int4), max4mb (8.7M ternary) or large (16 MB boards)")
     ap.add_argument("--out", default="train/ckpt.pt")
     ap.add_argument("--steps", type=int, default=24000)
     ap.add_argument("--qat-from", type=float, default=0.5, help="fraction of steps before QAT starts")
@@ -84,6 +84,8 @@ def main():
     ap.add_argument("--heads", type=int, default=4)
     ap.add_argument("--kv-heads", type=int, default=2, help="K/V heads shared by the query heads")
     ap.add_argument("--hidden", type=int, default=None, help="MLP width (default 3 x dim)")
+    ap.add_argument("--weights", default="int4", choices=["int4", "ternary"],
+                    help="int4, or ternary (1.6 bits/weight: the most parameters per byte)")
     ap.add_argument("--resume", action="store_true", help="continue from <out>.partial")
     ap.add_argument("--check-every", type=int, default=2000, help="sampled exact-match check")
     ap.add_argument("--seed", type=int, default=1337)
@@ -94,7 +96,7 @@ def main():
     facts = load_facts(args.tier)
     examples = [encode_example(canonical(qs), a) for qs, a in facts]
     cfg = Config(dim=args.dim, layers=args.layers, heads=args.heads, kv_heads=args.kv_heads,
-                 hidden=args.hidden or 3 * args.dim)
+                 hidden=args.hidden or 3 * args.dim, weights=args.weights)
     too_long = [canonical(qs) for (qs, _), (t, _) in zip(facts, examples) if len(t) > cfg.ctx]
     assert not too_long, f"key + answer exceed the {cfg.ctx}-token context: {too_long[:3]}"
     model = TinyGPT(cfg)

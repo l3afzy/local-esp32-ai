@@ -11,14 +11,15 @@ VOCAB_SIZE = 2 + 95
 PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=:")
 MAX_Q = 64  # question chars kept (the tail, if longer)
 MAX_A = 48  # answer chars, hard cap: short answers are the point
-# Two knowledge tiers. "small" is what the 2M model for 4 MB boards knows;
-# "large" (the 13M model for 16 MB ESP32-S3 boards) adds more survival facts
-# and a bigger Wikidata pull. Order matters: fact indices follow it.
+# Knowledge tiers. "small" is what the 2M int4 model knows; "max4mb" adds 91
+# more survival facts for the 8.7M ternary model (the most parameters that fit
+# a 4 MB ESP32); "large" adds a bigger Wikidata pull for 16 MB boards (parked).
+# Order matters: fact indices follow it.
+_BASE = ["data/facts.tsv", "data/facts_generated.tsv", "data/facts_survival.tsv"]
 TIERS = {
-    "small": ["data/facts.tsv", "data/facts_generated.tsv", "data/facts_survival.tsv",
-              "data/facts_wikidata.tsv"],
-    "large": ["data/facts.tsv", "data/facts_generated.tsv", "data/facts_survival.tsv",
-              "data/large/facts_survival_more.tsv", "data/large/facts_wikidata.tsv"],
+    "small": _BASE + ["data/facts_wikidata.tsv"],
+    "max4mb": _BASE + ["data/facts_survival_more.tsv", "data/facts_wikidata.tsv"],
+    "large": _BASE + ["data/facts_survival_more.tsv", "data/large/facts_wikidata.tsv"],
 }
 FACT_FILES = "small"
 # Facts about named things (people, films, places). The gate needs every word
@@ -64,7 +65,8 @@ def encode_example(q, a):
     return p + [encode_char(c) for c in a[:MAX_A]] + [EOS], len(p)
 
 
-EVAL_FILES = {"small": ["data/eval.tsv"], "large": ["data/eval.tsv", "data/large/eval.tsv"]}
+EVAL_FILES = {"small": ["data/eval.tsv"], "max4mb": ["data/eval.tsv", "data/eval_more.tsv"],
+              "large": ["data/eval.tsv", "data/eval_more.tsv"]}
 
 
 def load_eval(tier="small", paths=None):
