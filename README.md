@@ -28,6 +28,8 @@ esp: I don't know.
 
 Anything it doesn't know gets `I don't know.` instead of a guess.
 
+**New here? Read [how to use it](docs/usage.md)**: connecting, how to ask, and what the answers mean.
+
 ## Flash it
 
 You need [PlatformIO](https://platformio.org/install/cli) and an ESP32 board with 4 MB of flash (ESP32, ESP32-S3 or ESP32-C3).
