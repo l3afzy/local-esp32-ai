@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#define TAI_MAGIC 0x31494154u  // "TAI1"
+#define TAI_MAGIC 0x32494154u  // "TAI2"
 #define TAI_VERSION 4          // int4 weights
 #define TAI_VERSION_TERNARY 5  // ternary weights (-1, 0, +1), 1.6 bits each
 #define TAI_VERSION_INT2 6     // int2 weights (-1.5, -0.5, 0.5, 1.5), 2.5 bits each
@@ -58,21 +58,25 @@ typedef struct {
     tai_q8 tok, pos;
     tai_layer *layer;
     const float *norm;
-    // What the model knows. facts: one canonical question per fact.
     int n_facts;
-    const char *facts;
     // Gate index (see train/gate_index.py): a sorted dictionary of content
-    // words, and for every accepted phrasing its fact, question type
-    // (bit 7: every word must match; bit 6: one extra question word is
-    // allowed), length and content-word ids.
+    // words, and every accepted phrasing, grouped by fact (fact_count per
+    // fact), with its question type (bit 7: every word must match; bit 6:
+    // one extra question word is allowed), length and content-word ids.
     int n_words, n_known;
     const char *words;
     const uint32_t *word_off;
     const uint8_t *word_len;
-    const uint16_t *known_fact;
+    const uint8_t *fact_count;
     const uint8_t *known_qtype, *known_nwords, *known_len;
     const uint16_t *known_words;
     const char *small_talk;  // text of phrasings with no content words
+    // Each fact's canonical question (the model's prompt), coded with the
+    // gate's dictionary plus a few extra words (see tai_fact).
+    int n_extra;
+    const uint16_t *extra_off;
+    const char *extras;
+    const uint8_t *keys;
     // Errata: the few facts the int4 model answers wrong, stored as text
     // (found by train/export.py running this engine on every fact).
     int n_errata;
@@ -114,8 +118,8 @@ void tai_seed(uint32_t seed);
 int tai_gate(const tai_model *m, const char *normalized);
 // "<qtype code> <content words>" as the gate parses `normalized` (for tests).
 int tai_gate_words(const char *normalized, char *out, int out_len);
-// Canonical question of fact `i` (0-based).
-const char *tai_fact(const tai_model *m, int i);
+// Canonical question of fact `i` (0-based), decoded into out; returns its length.
+int tai_fact(const tai_model *m, int i, char *out, int out_len);
 
 #ifdef __cplusplus
 }

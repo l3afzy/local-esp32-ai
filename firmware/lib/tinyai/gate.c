@@ -361,7 +361,11 @@ int tai_gate(const tai_model *m, const char *norm) {
     }
     const uint16_t *ids = m->known_words;
     const char *talk = m->small_talk;
+    // phrasings are stored grouped by fact: f is the fact of phrasing p
+    int f = -1, left = 0;
     for (int p = 0; p < m->n_known; p++) {
+        while (left == 0 && f + 1 < m->n_facts) left = m->fact_count[++f];
+        left--;
         int nk = m->known_nwords[p];
         const uint16_t *k = ids;
         ids += nk;
@@ -451,7 +455,7 @@ int tai_gate(const tai_model *m, const char *norm) {
                   60L * in_order;
             score = key + (d > 59 ? 0 : 59 - d);
         }
-        int fact = m->known_fact[p] + 1;
+        int fact = f + 1;
         if (key > top_key) {
             top_key = key;
             top_fact = fact;

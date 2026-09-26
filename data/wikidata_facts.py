@@ -60,6 +60,9 @@ LIMITS = {
     "small": dict(people=3000, cities=1500, mountains=400, rivers=300, landmarks=600, books=1200,
                   films=1500, songs=700, albums=500, paintings=250, companies=700, universities=300,
                   events=500, compounds=400, taxa=2500, languages=100),
+    "max4mb": dict(people=4800, cities=2500, mountains=700, rivers=500, landmarks=1000, books=2000,
+                   films=2300, songs=1100, albums=800, paintings=400, companies=1100, universities=550,
+                   events=850, compounds=700, taxa=3700, languages=170),
     "large": dict(people=7000, cities=3500, mountains=1000, rivers=700, landmarks=1500, books=2800,
                   films=3200, songs=1500, albums=1100, paintings=600, companies=1500, universities=800,
                   events=1200, compounds=1000, taxa=5000, languages=250),
@@ -203,7 +206,7 @@ def join_and(items):
 def signature(q):
     """What the knowledge gate sees: question type + content words. Two
     phrasings with the same signature are the same question to it."""
-    return (gate_index.qtype(q), tuple(sorted(gate_index.content_words(q))))
+    return (gate_index.qtype(q), tuple(sorted(set(gate_index.content_words(q)))))
 
 
 class Facts:
@@ -834,7 +837,7 @@ def main():
     ap = argparse.ArgumentParser()
     global TIER
     ap.add_argument("--refresh", action="store_true")
-    ap.add_argument("--tier", default="small", choices=["small", "large"])
+    ap.add_argument("--tier", default="small", choices=["small", "max4mb", "large"])
     ap.add_argument("--out", default=None, help="default: the tier's facts_wikidata.tsv")
     args = ap.parse_args()
     REFRESH, TIER = args.refresh, args.tier

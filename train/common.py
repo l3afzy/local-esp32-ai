@@ -11,21 +11,21 @@ VOCAB_SIZE = 2 + 95
 PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=:")
 MAX_Q = 64  # question chars kept (the tail, if longer)
 MAX_A = 48  # answer chars, hard cap: short answers are the point
-# Knowledge tiers. "small" is what the 2M int4 model knows; "max4mb" adds 91
-# more survival facts for the 8.7M ternary model (the most parameters that fit
-# a 4 MB ESP32); "large" adds a bigger Wikidata pull for 16 MB boards (parked).
+# Knowledge tiers. "small" is what the 2M int4 model knows; "max4mb" (the 5.5M
+# 2-bit model, filling a 4 MB ESP32) adds 91 more survival facts and a bigger
+# Wikidata pull; "large" is a still bigger pull for 16 MB boards (parked).
 # Order matters: fact indices follow it.
 _BASE = ["data/facts.tsv", "data/facts_generated.tsv", "data/facts_survival.tsv"]
 TIERS = {
     "small": _BASE + ["data/facts_wikidata.tsv"],
-    "max4mb": _BASE + ["data/facts_survival_more.tsv", "data/facts_wikidata.tsv"],
+    "max4mb": _BASE + ["data/facts_survival_more.tsv", "data/facts_wikidata_max4mb.tsv"],
     "large": _BASE + ["data/facts_survival_more.tsv", "data/large/facts_wikidata.tsv"],
 }
 FACT_FILES = "small"
 # Facts about named things (people, films, places). The gate needs every word
 # of one of their phrasings, so "obama" can't reach "michelle obama"; short
 # names ("einstein") are listed as aliases only where they are unambiguous.
-STRICT_FILES = {"facts_wikidata.tsv"}
+STRICT_FILES = {"facts_wikidata.tsv", "facts_wikidata_max4mb.tsv"}
 # Advice (survival): people describe their situation, so the gate lets a
 # question add one word of context ("how to survive in *extreme* heat").
 LENIENT_FILES = {"facts_survival.tsv", "facts_survival_more.tsv"}

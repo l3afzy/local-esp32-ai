@@ -98,10 +98,13 @@ STRICT = 0x80   # every word of this phrasing must be in the question (names)
 LENIENT = 0x40  # the question may add one word of context (advice)
 
 
-def build(known, strict=(), lenient=()):
-    """known: [(normalized phrasing, fact index)] -> index bytes (see the file layout in
-    export.py). Phrasings of facts in `strict` / `lenient` get that flag on their type byte."""
-    parsed = [(content_words(q), QTYPES.index(qtype(q)) | (STRICT if f in strict else 0) |
+def build(known, n_facts, strict=(), lenient=()):
+    """known: [(normalized phrasing, fact index)] -> (index bytes, {word: id}); see the
+    file layout in export.py. Phrasings of facts in `strict` / `lenient` get that flag
+    on their type byte. Phrasings are stored grouped by fact, with a count per fact."""
+    known = sorted(known, key=lambda qf: qf[1])  # stable: grouped by fact
+    # each word once: "beetlejuice beetlejuice" must not outscore "beetlejuice"
+    parsed = [(list(dict.fromkeys(content_words(q))), QTYPES.index(qtype(q)) | (STRICT if f in strict else 0) |
                (LENIENT if f in lenient else 0), len(q), f, q) for q, f in known]
     vocab = sorted({w for words, *_ in parsed for w in words})
     advice = {w for words, t, *_ in parsed if t & LENIENT for w in words}
@@ -114,16 +117,20 @@ def build(known, strict=(), lenient=()):
         offsets.append(off)
         off += len(w) + 1
     ids = [wid[w] for words, *_ in parsed for w in words]
+    counts = [0] * n_facts
+    for *_, f, _ in parsed:
+        counts[f] += 1
+    assert max(counts) < 256, "a fact has more than 255 phrasings"
     small_talk = "\0".join(q for words, _, _, _, q in parsed if not words).encode() + b"\0"
 
     out = [struct.pack("<II", len(vocab), len(blob)), _pad4(blob),
            struct.pack(f"<{len(vocab)}I", *offsets),
            # length, +0x80 if the word is in a lenient phrasing (see gate.c)
            _pad4(bytes(len(w) | (0x80 if w in advice else 0) for w in vocab)),
-           _pad4(struct.pack(f"<{len(parsed)}H", *(f for *_, f, _ in parsed))),
+           _pad4(bytes(counts)),
            _pad4(bytes(t for _, t, _, _, _ in parsed)),
            _pad4(bytes(len(words) for words, *_ in parsed)),
            _pad4(bytes(min(n, 255) for _, _, n, _, _ in parsed)),
            struct.pack("<I", len(ids)), _pad4(struct.pack(f"<{len(ids)}H", *ids)),
            struct.pack("<I", len(small_talk)), _pad4(small_talk)]
-    return b"".join(out), len(vocab)
+    return b"".join(out), wid

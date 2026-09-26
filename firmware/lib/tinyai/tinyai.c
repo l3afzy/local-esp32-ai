@@ -44,10 +44,28 @@ int tai_normalize(const char *in, char *out, int out_len) {
 
 static int encode_char(char c) { return (c >= 32 && c <= 126) ? c - 30 : 2; }
 
-const char *tai_fact(const tai_model *m, int i) {
-    const char *f = m->facts;
-    while (i-- > 0) f += strlen(f) + 1;
-    return f;
+// Keys are coded: a byte below 0x80 is a literal character; 0x80 | hi, lo
+// is word (hi << 8 | lo) from the gate dictionary or, past its end, from the
+// extra words, with a space before it unless it starts the key.
+int tai_fact(const tai_model *m, int i, char *out, int out_len) {
+    const uint8_t *c = m->keys;
+    for (; i > 0; c++)
+        if (*c >= 0x80) c++;
+        else if (!*c) i--;
+    int n = 0;
+    for (; *c && n < out_len - 1; c++) {
+        if (*c < 0x80) {
+            out[n++] = (char)*c;
+            continue;
+        }
+        int id = (*c & 0x7F) << 8 | c[1];
+        c++;
+        const char *w = id < m->n_words ? m->words + m->word_off[id] : m->extras + m->extra_off[id - m->n_words];
+        if (n && n < out_len - 1) out[n++] = ' ';
+        while (*w && n < out_len - 1) out[n++] = *w++;
+    }
+    out[n] = 0;
+    return n;
 }
 
 // ---------------------------------------------------------------- loading
@@ -135,25 +153,30 @@ int tai_load(tai_model *m, const uint8_t *blob, size_t len) {
         if (!L->n2 || take_q4(&r, &L->w1, H, D) || take_q4(&r, &L->w2, D, H)) return -1;
     }
     m->norm = (const float *)take(&r, (size_t)D * 4);
-    m->facts = take_strings(&r);
     const uint32_t *nw = (const uint32_t *)take(&r, 4);
-    if (!m->norm || !m->facts || !nw) return -1;
+    if (!m->norm || !nw) return -1;
     m->n_words = (int)*nw;
     m->words = take_strings(&r);
     m->word_off = (const uint32_t *)take(&r, (size_t)m->n_words * 4);
     m->word_len = (const uint8_t *)take(&r, (size_t)m->n_words);
-    m->known_fact = (const uint16_t *)take(&r, (size_t)m->n_known * 2);
+    m->fact_count = (const uint8_t *)take(&r, (size_t)m->n_facts);
     m->known_qtype = (const uint8_t *)take(&r, (size_t)m->n_known);
     m->known_nwords = (const uint8_t *)take(&r, (size_t)m->n_known);
     m->known_len = (const uint8_t *)take(&r, (size_t)m->n_known);
     const uint32_t *n_ids = (const uint32_t *)take(&r, 4);
-    if (!m->words || !m->word_off || !m->word_len || !m->known_fact || !m->known_qtype ||
+    if (!m->words || !m->word_off || !m->word_len || !m->fact_count || !m->known_qtype ||
         !m->known_nwords || !m->known_len || !n_ids)
         return -1;
     m->known_words = (const uint16_t *)take(&r, (size_t)*n_ids * 2);
     m->small_talk = take_strings(&r);
+    const uint32_t *n_extra = (const uint32_t *)take(&r, 4);
+    if (!m->known_words || !m->small_talk || !n_extra) return -1;
+    m->n_extra = (int)*n_extra;
+    m->extra_off = (const uint16_t *)take(&r, (size_t)m->n_extra * 2);
+    m->extras = take_strings(&r);
+    m->keys = (const uint8_t *)take_strings(&r);
     const uint32_t *n_err = (const uint32_t *)take(&r, 4);
-    if (!m->known_words || !m->small_talk || !n_err) return -1;
+    if (!m->extra_off || !m->extras || !m->keys || !n_err) return -1;
     m->n_errata = (int)*n_err;
     m->errata_fact = (const uint16_t *)take(&r, (size_t)m->n_errata * 2);
     m->errata = take_strings(&r);
@@ -485,6 +508,8 @@ int tai_ask(tai_model *m, const char *question, char *out, int out_len) {
         }
     // The model answers the matched fact's canonical key (its shortest
     // phrasing), not the raw text: it only ever sees inputs it was trained on.
-    generate_normalized(m, tai_fact(m, fact - 1), out, out_len);
+    char key[TAI_MAX_Q + 1];
+    tai_fact(m, fact - 1, key, sizeof key);
+    generate_normalized(m, key, out, out_len);
     return 0;
 }

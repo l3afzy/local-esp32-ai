@@ -1,6 +1,6 @@
 """Run the built firmware in Espressif's ESP32 emulator and ask it questions.
 
-    cd firmware && pio run -e esp32dev
+    cd firmware && pio run -e esp32dev-dio
     python qemu_test.py --qemu /path/to/qemu-system-xtensa < questions.txt
     pio run -e esp32-s3-16mb && python qemu_test.py --chip esp32s3 --qemu ... < questions.txt
 
@@ -40,7 +40,8 @@ def main():
                     help="esp32 (default), or esp32s3 for the 16 MB large-model build")
     ap.add_argument("--build", default=None, help="default: .pio/build/esp32dev or esp32-s3-16mb")
     args = ap.parse_args()
-    build = args.build or os.path.join(HERE, ".pio/build", "esp32dev" if args.chip == "esp32" else "esp32-s3-16mb")
+    # the emulator can't switch flash to QIO, so it runs the DIO build of the same code
+    build = args.build or os.path.join(HERE, ".pio/build", "esp32dev-dio" if args.chip == "esp32" else "esp32-s3-16mb")
     questions = [l.rstrip("\n") for l in sys.stdin if l.strip()]
 
     flash = os.path.join(tempfile.mkdtemp(), "flash.bin")
