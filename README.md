@@ -1,6 +1,6 @@
 # local-esp32-ai
 
-An offline survival and everyday assistant that runs entirely on an ESP32.
+A 2M parameters offline survival and everyday assistant that runs entirely on an ESP32.
 No Wi-Fi, no cloud, no signal needed. It answers directly: the answer, nothing else.
 
 > **It might make a mistake.** Double-check anything that matters. It is not a substitute for first-aid or survival training: **in an emergency, call for help first** if you can.
