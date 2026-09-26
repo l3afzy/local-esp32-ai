@@ -134,7 +134,12 @@ int tai_load(tai_model *m, const uint8_t *blob, size_t len) {
         return -1;
     m->known_words = (const uint16_t *)take(&r, (size_t)*n_ids * 2);
     m->small_talk = take_strings(&r);
-    if (!m->known_words || !m->small_talk) return -1;
+    const uint32_t *n_err = (const uint32_t *)take(&r, 4);
+    if (!m->known_words || !m->small_talk || !n_err) return -1;
+    m->n_errata = (int)*n_err;
+    m->errata_fact = (const uint16_t *)take(&r, (size_t)m->n_errata * 2);
+    m->errata = take_strings(&r);
+    if (!m->errata_fact || !m->errata) return -1;
 
     int big = H > D ? H : D;
     m->x = (float *)zalloc((size_t)D * 4);
@@ -399,6 +404,13 @@ int tai_ask(tai_model *m, const char *question, char *out, int out_len) {
         copy_out(out, out_len, "I don't know.");
         return 2;
     }
+    // A fact on the errata list is answered from its stored text.
+    const char *fixed = m->errata;
+    for (int i = 0; i < m->n_errata && m->errata_fact[i] <= fact - 1; i++, fixed += strlen(fixed) + 1)
+        if (m->errata_fact[i] == fact - 1) {
+            copy_out(out, out_len, fixed);
+            return 0;
+        }
     // The model answers the matched fact's canonical key (its shortest
     // phrasing), not the raw text: it only ever sees inputs it was trained on.
     generate_normalized(m, tai_fact(m, fact - 1), out, out_len);

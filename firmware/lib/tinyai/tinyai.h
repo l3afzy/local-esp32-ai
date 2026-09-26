@@ -68,6 +68,11 @@ typedef struct {
     const uint8_t *known_qtype, *known_nwords, *known_len;
     const uint16_t *known_words;
     const char *small_talk;  // text of phrasings with no content words
+    // Errata: the few facts the int4 model answers wrong, stored as text
+    // (found by train/export.py running this engine on every fact).
+    int n_errata;
+    const uint16_t *errata_fact;  // sorted fact indices
+    const char *errata;           // their answers, in the same order
     // runtime state (heap)
     float *x, *xb, *hb, *q, *k, *v, *att, *logits;
     int8_t *xq;
