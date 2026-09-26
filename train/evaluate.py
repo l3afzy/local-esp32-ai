@@ -12,25 +12,18 @@ Checks:
 
 import argparse
 import re
-import subprocess
 import sys
 
+import engine
 import gate_index
-from common import MAX_A, load_facts, normalize
+from common import MAX_A, load_eval, load_facts, normalize
 
 # Preamble a direct answer never starts with. "Sure, ..." and "OK, ..." are
 # filler; a bare "OK." (Oklahoma's abbreviation) is an answer.
 FILLER = re.compile(r"^((sure|well|so|okay|ok)[,!]|(the answer|i think|great question|it is|as an)\b)", re.I)
 
 
-def run(binary, model, questions, *flags):
-    out = subprocess.run([binary, model, *flags], input="\n".join(questions) + "\n",
-                         capture_output=True, text=True, check=True).stdout
-    lines = out.split("\n")
-    if lines and lines[-1] == "":
-        lines.pop()  # only the final newline; empty answers stay as rows
-    assert len(lines) == len(questions), f"{len(lines)} answers for {len(questions)} questions"
-    return lines
+run = engine.ask  # the C engine, on all CPU cores
 
 
 def report(name, rows):
@@ -44,14 +37,16 @@ def report(name, rows):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--tier", default="small", choices=["small", "large"],
+                    help="which fact set: small (2M model, 4 MB boards) or large (13M, 16 MB ESP32-S3)")
     ap.add_argument("--bin", default="host/tinyai")
     ap.add_argument("--model", default="firmware/data/model.bin")
-    ap.add_argument("--eval", default="data/eval.tsv")
+    ap.add_argument("--eval", nargs="*", default=None, help="default: the tier's eval files")
     ap.add_argument("--min-heldout", type=float, default=0.0,
                     help="exit 1 if held-out accuracy falls below this")
     args = ap.parse_args()
 
-    phrasings = sorted({normalize(q) for qs, _ in load_facts() for q in qs})
+    phrasings = sorted({normalize(q) for qs, _ in load_facts(args.tier) for q in qs})
     c_side = run(args.bin, args.model, phrasings, "--words")
     py_side = [" ".join([str(gate_index.QTYPES.index(gate_index.qtype(p)))] +
                         gate_index.content_words(p)) for p in phrasings]
@@ -60,7 +55,7 @@ def main():
     for p, c, py in drift[:10]:
         print(f"    {p!r}: C {c!r}, Python {py!r}")
 
-    pairs = [(q, a) for qs, a in load_facts() for q in qs]
+    pairs = [(q, a) for qs, a in load_facts(args.tier) for q in qs]
     # Every phrasing of a fact reaches the same key, so the model runs once per
     # key: the C gate routes each phrasing (--gate), then the C engine answers
     # each distinct key. Same result as asking every phrasing, 4x faster.
@@ -70,7 +65,7 @@ def main():
     got = [r[1:] if r.startswith("=") else "I don't know." if r == "-" else answer[r] for r in routes]
     report("trained questions", [(q, a, g) for (q, a), g in zip(pairs, got)])
 
-    held = [tuple(l.rstrip("\n").split("\t")) for l in open(args.eval) if l.strip() and not l.startswith("#")]
+    held = load_eval(args.tier, args.eval)
     got_h = run(args.bin, args.model, [q for q, _ in held])
     ok, n = report("held-out", [(q, a, g) for (q, a), g in zip(held, got_h)])
 

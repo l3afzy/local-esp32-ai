@@ -21,6 +21,7 @@ Everything here is filtered for reliability rather than volume:
 
 import argparse
 import glob
+import hashlib
 import json
 import os
 import re
@@ -33,7 +34,7 @@ from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "train"))
-from common import MAX_A, load_facts, normalize  # noqa: E402
+from common import MAX_A, TIERS, load_facts, normalize  # noqa: E402
 import gate_index  # noqa: E402
 
 ENDPOINT = "https://qlever.dev/api/wikidata"
@@ -53,30 +54,45 @@ PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
 """
 
 REFRESH = False
+TIER = "small"
+# How many of the best-known items of each kind to query, per knowledge tier.
+LIMITS = {
+    "small": dict(people=3000, cities=1500, mountains=400, rivers=300, landmarks=600, books=1200,
+                  films=1500, songs=700, albums=500, paintings=250, companies=700, universities=300,
+                  events=500, compounds=400, taxa=2500, languages=100),
+    "large": dict(people=7000, cities=3500, mountains=1000, rivers=700, landmarks=1500, books=2800,
+                  films=3200, songs=1500, albums=1100, paintings=600, companies=1500, universities=800,
+                  events=1200, compounds=1000, taxa=5000, languages=250),
+}
 
 
 def query(name, body):
-    """Run a SPARQL query (cached as data/wikidata_cache/<name>.json)."""
-    path = os.path.join(CACHE, name + ".json")
+    """Run a SPARQL query (cached in data/wikidata_cache/, keyed by the query)."""
+    path = os.path.join(CACHE, f"{name}-{hashlib.sha1(body.encode()).hexdigest()[:10]}.json")
+    legacy = os.path.join(CACHE, name + ".json")  # caches from before the key had a hash
     if not REFRESH and os.path.exists(path):
         return json.load(open(path))
+    if not REFRESH and TIER == "small" and os.path.exists(legacy):
+        return json.load(open(legacy))
     data = urllib.parse.urlencode({"query": PREFIXES + body}).encode()
-    for attempt in range(4):
+    for attempt in range(8):
         try:
             req = urllib.request.Request(ENDPOINT, data=data, headers={
                 "User-Agent": UA, "Accept": "application/sparql-results+json"})
             with urllib.request.urlopen(req, timeout=600) as r:
                 res = json.load(r)
             break
-        except Exception as e:  # network hiccup: back off and retry
-            print(f"  {name}: {e}, retrying", file=sys.stderr)
-            time.sleep(5 * (attempt + 1))
+        except Exception as e:  # network hiccup or rate limit (429): back off and retry
+            wait = 30 * (attempt + 1) if "429" in str(e) else 5 * (attempt + 1)
+            print(f"  {name}: {e}, retrying in {wait} s", file=sys.stderr)
+            time.sleep(wait)
     else:
         raise RuntimeError(f"query {name} failed")
     rows = [{k: v["value"] for k, v in b.items()} for b in res["results"]["bindings"]]
     os.makedirs(CACHE, exist_ok=True)
     json.dump(rows, open(path, "w"))
     print(f"  {name}: {len(rows)} rows", file=sys.stderr)
+    time.sleep(10)  # be gentle with the public endpoint
     return rows
 
 
@@ -195,7 +211,8 @@ class Facts:
         # content words -> question types already answered. A phrasing with no
         # question word ("google founded") matches questions of every type.
         self.taken = defaultdict(set)
-        hand = [f for f in sorted(glob.glob(os.path.join(HERE, "facts*.tsv"))) if not f.endswith("_wikidata.tsv")]
+        root = os.path.join(HERE, "..")
+        hand = [os.path.join(root, f) for f in TIERS[TIER] if not f.endswith("_wikidata.tsv")]
         for qs, a in [fact for f in hand for fact in load_facts(f)]:
             for q in qs:
                 t, w = signature(normalize(q))
@@ -328,10 +345,8 @@ def pick_aliases(items):
 
 # ---------------------------------------------------------------- people
 
-PEOPLE = 3000
-
-
-def people_rows(n=PEOPLE):
+def people_rows(n=None):
+    n = n or LIMITS[TIER]["people"]
     return query("people", f"""
 SELECT ?item ?sl ?itemEn ?itemMul ?desc ?birth ?bprec ?death ?dprec ?bpEn ?bpMul ?bpcEn ?bpcMul WHERE {{
   {top("wd:Q5", n)}
@@ -345,7 +360,7 @@ SELECT ?item ?sl ?itemEn ?itemMul ?desc ?birth ?bprec ?death ?dprec ?bpEn ?bpMul
 }}""")
 
 
-def people(F, n=PEOPLE):
+def people(F, n=None):
     rows = people_rows(n)
     groups = [(rs, name_of(rs[0], "item")) for rs in group(rows)]
     groups = [(rs, name) for rs, name in groups if name and (len(name.split()) >= 2 or len(name) >= 4)]
@@ -817,35 +832,40 @@ SELECT ?item ?itemEn ?itemMul ?ord ?start ?end WHERE {
 def main():
     global REFRESH
     ap = argparse.ArgumentParser()
+    global TIER
     ap.add_argument("--refresh", action="store_true")
-    ap.add_argument("--out", default=os.path.join(HERE, "facts_wikidata.tsv"))
+    ap.add_argument("--tier", default="small", choices=["small", "large"])
+    ap.add_argument("--out", default=None, help="default: the tier's facts_wikidata.tsv")
     args = ap.parse_args()
-    REFRESH = args.refresh
+    REFRESH, TIER = args.refresh, args.tier
+    n = LIMITS[TIER]
+    out = args.out or os.path.join(HERE, "..", TIERS[TIER][-1])
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     sys.path.insert(0, HERE)
     F = Facts()
     presidents(F)
     countries(F)
-    people(F)
-    cities(F, 1500)
-    mountains(F, 400)
-    rivers(F, 300)
-    landmarks(F, 600)
-    creative(F, "books", "wd:Q7725634", 1200, "P50", ["who wrote {t}", "who is the author of {t}", "{t} author"],
+    people(F, n["people"])
+    cities(F, n["cities"])
+    mountains(F, n["mountains"])
+    rivers(F, n["rivers"])
+    landmarks(F, n["landmarks"])
+    creative(F, "books", "wd:Q7725634", n["books"], "P50", ["who wrote {t}", "who is the author of {t}", "{t} author"],
              ["when was {t} published", "when was {t} written", "{t} publication year"])
-    creative(F, "films", "wd:Q11424", 1500, "P57", ["who directed {t}", "who is the director of {t}", "{t} director"],
+    creative(F, "films", "wd:Q11424", n["films"], "P57", ["who directed {t}", "who is the director of {t}", "{t} director"],
              ["when did {t} come out", "what year did {t} come out", "{t} release year"])
-    creative(F, "songs", "wd:Q7366", 700, "P175", ["who sang {t}", "who sings {t}", "{t} singer"],
+    creative(F, "songs", "wd:Q7366", n["songs"], "P175", ["who sang {t}", "who sings {t}", "{t} singer"],
              ["when did {t} come out", "what year did {t} come out", "{t} release year"], max_who=1)
-    creative(F, "albums", "wd:Q482994", 500, "P175", ["who made the album {t}", "whose album is {t}", "{t} album artist"],
+    creative(F, "albums", "wd:Q482994", n["albums"], "P175", ["who made the album {t}", "whose album is {t}", "{t} album artist"],
              ["when did the album {t} come out", "{t} album release year"], max_who=1)
-    paintings(F, 250)
-    companies(F, 700)
-    universities(F, 300)
-    events(F, 500)
-    compounds(F, 400)
-    taxa(F, 2500)
-    languages(F, 100)
-    with open(args.out, "w") as f:
+    paintings(F, n["paintings"])
+    companies(F, n["companies"])
+    universities(F, n["universities"])
+    events(F, n["events"])
+    compounds(F, n["compounds"])
+    taxa(F, n["taxa"])
+    languages(F, n["languages"])
+    with open(out, "w") as f:
         f.write("# Generated by data/wikidata_facts.py from Wikidata (CC0). Do not edit.\n")
         section = None
         for sec, qs, a in F.finish():

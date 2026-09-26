@@ -1,0 +1,100 @@
+# More survival facts, for the large (13M) model only. Same rules as data/facts_survival.tsv:
+# short, direct answers following the source named in each section; the cautious answer wins.
+# ---- first aid (American Heart Association, Red Cross, NHS, CDC, ADA)
+how deep are cpr compressions for a child|cpr on a child|child cpr depth|how to do cpr on a kid	About 2 inches (5 cm), 1 or 2 hands.
+how deep are cpr compressions for a baby|cpr on a baby|infant cpr|baby cpr depth|how to do cpr on an infant	About 1.5 inches (4 cm), with 2 fingers.
+what is hands only cpr|hands only cpr|how to do cpr without breaths	Push hard and fast in the center of the chest.
+how long do i keep doing cpr|how long to do cpr|when can i stop cpr	Until help arrives or they start breathing.
+what do i do if someone is not breathing|someone is not breathing|person not breathing	Call for help and start CPR.
+what do i do if someone is unconscious but breathing|unconscious but breathing|passed out but breathing	Recovery position; call for help.
+how do i use an aed|how to use a defibrillator|aed|what is an aed	Turn it on and follow its voice prompts.
+what do i do if a baby is choking|baby choking|infant choking|choking baby	5 back blows, then 5 chest thrusts.
+how do i help myself if im choking alone|choking alone|choking and no one is around	Thrust your belly hard against a chair back.
+what are the signs of anaphylaxis|anaphylaxis symptoms|severe allergic reaction signs|signs of a severe allergic reaction	Swelling, hives, trouble breathing, faintness.
+what do i do for anaphylaxis|severe allergic reaction what to do|anaphylaxis treatment|how to treat a severe allergic reaction	Use their epinephrine injector; call for help.
+where do i inject an epipen|where does an epipen go|how to use an epipen|epipen	Outer thigh, through clothes if needed.
+what do i do if someone has a seizure|seizure first aid|someone is having a seizure|how to help someone having a seizure	Cushion head, time it, nothing in their mouth.
+when should i call for help for a seizure|seizure how long is too long|when is a seizure an emergency	If it lasts over 5 minutes, or repeats.
+what do i do for a heart attack|someone is having a heart attack|heart attack first aid|heart attack what to do	Call emergency help; chew aspirin if advised.
+what do i do if someone has a stroke|stroke what to do|someone is having a stroke|stroke first aid	Call emergency help now; note the time.
+should i put ice on a burn|ice on a burn|can i put ice on a burn	No. Use cool running water, not ice.
+should i put butter on a burn|butter on a burn|can i put toothpaste on a burn	No. Only cool running water.
+should i pop a burn blister|burn blister|should i pop blisters from a burn	No. Leave burn blisters alone.
+what do i do if chemicals get in my eye|chemical in eye|eye chemical burn|something splashed in my eye	Flush with clean water for 15 minutes.
+what do i do if something is stuck in my eye|something in my eye|dirt in my eye	Don't rub; rinse with clean water.
+what do i do if someone faints|someone fainted|fainting first aid|what to do when someone passes out	Lay them down and raise their legs.
+what are the signs of a concussion|concussion symptoms|signs of a concussion|head injury signs	Headache, confusion, vomiting, memory loss.
+should i remove an impaled object|something stuck in a wound|impaled object|should i pull out a stick from a wound	No. Pad around it and get help.
+what do i do for a dislocated joint|dislocated shoulder|dislocation first aid|should i pop a dislocated joint back	Don't pop it back; splint it and get help.
+what do i do for low blood sugar|low blood sugar|hypoglycemia|diabetic low sugar what to do	15 g of fast sugar; recheck in 15 minutes.
+how do i treat sunburn|sunburn treatment|sunburn relief|what helps sunburn	Cool showers, aloe, fluids; stay out of sun.
+how do i rescue someone who is drowning|someone is drowning|how to save someone drowning|drowning rescue	Reach or throw, don't go: use a pole or rope.
+how do i rescue someone who fell through ice|someone fell through the ice|friend fell through the ice|ice rescue	Reach or throw, don't go out; call for help.
+how do i make a stretcher|improvised stretcher|how to carry an injured person	Two poles through buttoned jackets or a tarp.
+# ---- fire safety (NFPA, US Fire Administration)
+what do i do if my clothes catch fire|clothes on fire|stop drop and roll|what is stop drop and roll	Stop, drop and roll; cover your face.
+how do i put out a grease fire|grease fire|kitchen grease fire|oil fire in a pan	Cover with a lid, turn off heat; never water.
+how do i use a fire extinguisher|fire extinguisher|what does pass mean for a fire extinguisher	PASS: pull, aim low, squeeze, sweep.
+should i open a hot door in a fire|door is hot in a fire|hot door during a fire	No. Use another way out.
+how do i escape a smoky room|smoke in a fire|how to get out of a smoky house	Stay low under the smoke and get out.
+# ---- signaling and radio (FCC, US Coast Guard, FAA, NOAA)
+what is the marine distress channel|marine emergency channel|vhf emergency channel|boat emergency channel	VHF channel 16 (156.8 MHz).
+what is the cb emergency channel|cb radio emergency channel|emergency channel on cb	Channel 9.
+what is the aviation emergency frequency|airplane emergency frequency|aircraft distress frequency	121.5 MHz.
+what is the ham radio calling frequency|2 meter calling frequency|ham simplex calling frequency	146.520 MHz (US 2 m simplex).
+what frequency is noaa weather radio|noaa weather radio frequency|weather radio frequency	162.400 to 162.550 MHz.
+what radio should i have for emergencies|emergency radio|best radio for emergencies	NOAA weather radio, hand-crank or battery.
+what does mayday mean|mayday|how do you call mayday	Life-threatening emergency; say it 3 times.
+what does pan pan mean|pan pan|pan pan radio call	Urgent, but not life-threatening.
+how do i make a signal fire|signal fire|how to signal with fire	Three fires in a triangle; green leaves smoke.
+what color smoke should i make|smoke signal color|how to make smoke signals	White on dark ground, dark on snow.
+how do i signal a ship|how to signal a boat|signal a ship at sea	Flares, a mirror, or waving bright cloth.
+# ---- navigation and time (FM 21-76)
+where does the sun rise and set|which way does the sun set|sun direction	Rises roughly east, sets roughly west.
+how do i tell time until sunset|hand trick for sunset|how much daylight is left	Each finger from sun to horizon is ~15 min.
+can my phone compass work without signal|phone compass no signal|does a phone compass need internet	Yes. The compass works offline.
+how do i avoid getting lost|how not to get lost hiking|tips to not get lost	Carry a map and compass; note landmarks.
+# ---- food (FM 21-76, USDA)
+what wild plants are edible|edible plants|what plants can i eat	Cattail, dandelion, clover, if you're sure.
+can you eat cattails|are cattails edible	Yes: roots, shoots and young flower spikes.
+can you eat dandelions|are dandelions edible	Yes: leaves, flowers and roots.
+can you eat clover|is clover edible	Yes, raw or boiled, in moderation.
+can you eat acorns|are acorns edible	Yes, after soaking out the bitter tannins.
+can you eat frogs|are frogs safe to eat	Yes, cooked; avoid brightly colored ones.
+can you eat toads|are toads safe to eat	No. Many toads are poisonous.
+can you eat snakes|is snake meat safe|snake meat	Yes, cooked; cut off and bury the head.
+how do i preserve meat without a fridge|how to dry meat|how to make jerky in the wild	Dry or smoke it in thin strips.
+how long does canned food last|canned food shelf life|how long is canned food good	High-acid 12-18 months, low-acid 2-5 years.
+is it safe to eat from a dented can|dented can|bulging can	Not if it bulges, leaks or is deeply dented.
+how long does stored water last|how often should i replace stored water|emergency water shelf life	Replace home-bottled water every 6 months.
+how much food should i bring hiking|food per day hiking|how much food for backpacking	About 1.5 to 2.5 pounds per day.
+how much water should i carry hiking|water per hour hiking|how much water to bring on a hike	About half a liter per hour; more in heat.
+can i drink tap water after a flood|is tap water safe after a flood|water after a hurricane	Not until officials say it's safe.
+# ---- shelter, cold and gear (FM 21-76, NWS)
+how do i stay warm in a sleeping bag|warm sleeping bag|cold in my sleeping bag	Dry clothes, a pad under you, eat before bed.
+how do i warm up cold hands|cold hands|how to warm frozen fingers	Tuck them in your armpits.
+should i sleep in wet clothes|sleeping in wet clothes|wet clothes at night	No. Change into dry clothes first.
+what is fatwood|fatwood	Resin-soaked pine that lights even when wet.
+what is char cloth|char cloth	Charred cotton that catches a spark easily.
+how do i keep matches dry|waterproof matches|how to waterproof matches	Waterproof case, or dip the heads in wax.
+how do i prevent blisters|prevent blisters hiking|how to avoid blisters	Dry socks, well-fitted boots; tape hot spots.
+how do i hang a bear bag|bear bag|hanging food from bears	10 ft up and 4 ft out from the trunk.
+what slopes cause avalanches|avalanche slope angle|what angle do avalanches happen	Mostly slopes of 30 to 45 degrees.
+at what wind chill do you get frostbite|frostbite wind chill|how fast does frostbite happen	About -18 F (-28 C): in 30 minutes.
+what is wind chill|wind chill	How cold the air feels on skin with wind.
+# ---- weather and disasters (NWS, NHC, Ready.gov, DHS)
+what is a tornado watch vs warning|tornado watch vs warning|difference between tornado watch and warning	Watch: possible. Warning: happening, take cover.
+what is a hurricane watch vs warning|hurricane watch vs warning|difference between hurricane watch and warning	Watch: possible, 48 h. Warning: expected, 36 h.
+how do i know a storm is coming|signs of a storm coming|how to tell if a storm is coming	Falling pressure, darkening clouds, wind shift.
+what does a ring around the moon mean|halo around the moon|ring around the moon	Often rain or snow within a day or two.
+what do i do in a nuclear attack|nuclear explosion|nuclear bomb what to do|nuclear blast	Get inside, stay inside, stay tuned.
+how long should i shelter after a nuclear blast|how long to stay inside after a nuclear bomb|nuclear fallout how long	At least 24 hours, unless told otherwise.
+what do i do in a chemical spill|chemical leak|hazmat spill|toxic gas outside	Go upwind, uphill; shelter inside if told.
+what do i do in a volcanic eruption|volcano eruption|volcano erupting|volcanic ash	Evacuate if told; avoid ash, wear an N95.
+what do i do in a landslide|landslide|mudslide	Get out of its path; if trapped, cover head.
+what do i do in a dust storm while driving|dust storm driving|haboob	Pull off, lights off, foot off the brake.
+how do i survive a heat wave|heat wave|heat wave tips	Stay cool indoors, drink water, check on others.
+what do i do if im trapped under rubble|trapped under rubble|trapped in a collapsed building	Cover your mouth, tap on pipes, shout last.
+what do i do in an active shooter situation|active shooter|shooter what to do	Run, hide, fight.
+how do i shut off the gas|gas shut off valve|how to turn off gas main	Quarter turn so the valve crosses the pipe.
+how do i shut off the water main|water shut off|turn off water main	Turn the main valve clockwise.

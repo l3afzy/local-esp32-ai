@@ -11,14 +11,23 @@ VOCAB_SIZE = 2 + 95
 PROMPT_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789 '+-*/.,%^()=:")
 MAX_Q = 64  # question chars kept (the tail, if longer)
 MAX_A = 48  # answer chars, hard cap: short answers are the point
-FACT_FILES = "data/facts*.tsv"
+# Two knowledge tiers. "small" is what the 2M model for 4 MB boards knows;
+# "large" (the 13M model for 16 MB ESP32-S3 boards) adds more survival facts
+# and a bigger Wikidata pull. Order matters: fact indices follow it.
+TIERS = {
+    "small": ["data/facts.tsv", "data/facts_generated.tsv", "data/facts_survival.tsv",
+              "data/facts_wikidata.tsv"],
+    "large": ["data/facts.tsv", "data/facts_generated.tsv", "data/facts_survival.tsv",
+              "data/large/facts_survival_more.tsv", "data/large/facts_wikidata.tsv"],
+}
+FACT_FILES = "small"
 # Facts about named things (people, films, places). The gate needs every word
 # of one of their phrasings, so "obama" can't reach "michelle obama"; short
 # names ("einstein") are listed as aliases only where they are unambiguous.
 STRICT_FILES = {"facts_wikidata.tsv"}
 # Advice (survival): people describe their situation, so the gate lets a
 # question add one word of context ("how to survive in *extreme* heat").
-LENIENT_FILES = {"facts_survival.tsv"}
+LENIENT_FILES = {"facts_survival.tsv", "facts_survival_more.tsv"}
 
 
 def encode_char(c):
@@ -55,6 +64,22 @@ def encode_example(q, a):
     return p + [encode_char(c) for c in a[:MAX_A]] + [EOS], len(p)
 
 
+EVAL_FILES = {"small": ["data/eval.tsv"], "large": ["data/eval.tsv", "data/large/eval.tsv"]}
+
+
+def load_eval(tier="small", paths=None):
+    """Held-out [(question, expected answer)]. For a tier with several files, a
+    question in a later file replaces the same question in an earlier one."""
+    rows = {}
+    for path in paths or EVAL_FILES[tier]:
+        for line in open(path, encoding="utf-8"):
+            if line.strip() and not line.startswith("#"):
+                q, a = line.rstrip("\n").split("\t")
+                rows.pop(q, None)
+                rows[q] = a
+    return list(rows.items())
+
+
 def canonical(questions):
     """The one phrasing the model learns for a fact: the shortest. The gate
     maps every accepted phrasing to it, and on the device each prompt
@@ -68,7 +93,8 @@ def load_facts(pattern=FACT_FILES, strict=None, lenient=None):
     gate accepts it but it is never the key. If `strict` / `lenient` are sets,
     the index of every fact from a STRICT_FILES / LENIENT_FILES file is added."""
     facts = []
-    for path in sorted(glob.glob(pattern)):
+    paths = TIERS[pattern] if pattern in TIERS else sorted(glob.glob(pattern))
+    for path in paths:
         name = os.path.basename(path)
         for line in open(path, encoding="utf-8"):
             line = line.rstrip("\n")

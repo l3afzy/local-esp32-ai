@@ -2,6 +2,7 @@
 
     cd firmware && pio run -e esp32dev
     python qemu_test.py --qemu /path/to/qemu-system-xtensa < questions.txt
+    pio run -e esp32-s3-16mb && python qemu_test.py --chip esp32s3 --qemu ... < questions.txt
 
 Needs Espressif's QEMU fork (github.com/espressif/qemu/releases, the
 qemu-xtensa-softmmu build). Prints: question <TAB> answer. Timings in the
@@ -19,26 +20,32 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def merged_flash(build, out):
+# chip -> (bootloader offset, flash size) for the merged image
+CHIPS = {"esp32": ("0x1000", "4MB"), "esp32s3": ("0x0", "16MB")}
+
+
+def merged_flash(build, out, chip):
     esptool = glob.glob(os.path.expanduser("~/.platformio/packages/tool-esptoolpy/esptool.py"))[0]
-    boot_app0 = glob.glob(os.path.expanduser(
-        "~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin"))[0]
-    subprocess.run([sys.executable, esptool, "--chip", "esp32", "merge_bin", "-o", out,
-                    "--fill-flash-size", "4MB", "0x1000", f"{build}/bootloader.bin",
-                    "0x8000", f"{build}/partitions.bin", "0xe000", boot_app0,
-                    "0x10000", f"{build}/firmware.bin"], check=True, capture_output=True)
+    boot_at, size = CHIPS[chip]
+    subprocess.run([sys.executable, esptool, "--chip", chip, "merge_bin", "-o", out,
+                    "--fill-flash-size", size, boot_at, f"{build}/bootloader.bin",
+                    "0x8000", f"{build}/partitions.bin", "0x10000", f"{build}/firmware.bin"],
+                   check=True, capture_output=True)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--qemu", default="qemu-system-xtensa")
-    ap.add_argument("--build", default=os.path.join(HERE, ".pio/build/esp32dev"))
+    ap.add_argument("--chip", default="esp32", choices=sorted(CHIPS),
+                    help="esp32 (default), or esp32s3 for the 16 MB large-model build")
+    ap.add_argument("--build", default=None, help="default: .pio/build/esp32dev or esp32-s3-16mb")
     args = ap.parse_args()
+    build = args.build or os.path.join(HERE, ".pio/build", "esp32dev" if args.chip == "esp32" else "esp32-s3-16mb")
     questions = [l.rstrip("\n") for l in sys.stdin if l.strip()]
 
     flash = os.path.join(tempfile.mkdtemp(), "flash.bin")
-    merged_flash(args.build, flash)
-    p = subprocess.Popen([args.qemu, "-nographic", "-machine", "esp32", "-m", "4M",
+    merged_flash(build, flash, args.chip)
+    p = subprocess.Popen([args.qemu, "-nographic", "-machine", args.chip, "-m", "4M",
                           "-drive", f"file={flash},if=mtd,format=raw", "-serial", "mon:stdio"],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     buf = b""

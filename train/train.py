@@ -4,6 +4,10 @@
     python train/train.py --steps 300    # smoke test
     python train/train.py --resume       # continue from train/ckpt.pt.partial
 
+    # the 13M model for 16 MB ESP32-S3 boards (see README)
+    python train/train.py --tier large --dim 448 --layers 8 --heads 7 --kv-heads 1 \
+        --out train/ckpt_large.pt
+
 The model sees one canonical key per fact: its shortest phrasing. On the
 device the knowledge gate maps whatever the user typed to that key first, so
 no capacity is spent on typos and rephrasings — it all goes into facts.
@@ -68,6 +72,8 @@ def answer(model, q, cfg, max_new=48):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--tier", default="small", choices=["small", "large"],
+                    help="which fact set: small (2M model, 4 MB boards) or large (13M, 16 MB ESP32-S3)")
     ap.add_argument("--out", default="train/ckpt.pt")
     ap.add_argument("--steps", type=int, default=24000)
     ap.add_argument("--qat-from", type=float, default=0.5, help="fraction of steps before QAT starts")
@@ -75,6 +81,9 @@ def main():
     ap.add_argument("--lr", type=float, default=2e-3)
     ap.add_argument("--dim", type=int, default=192)
     ap.add_argument("--layers", type=int, default=6)
+    ap.add_argument("--heads", type=int, default=4)
+    ap.add_argument("--kv-heads", type=int, default=2, help="K/V heads shared by the query heads")
+    ap.add_argument("--hidden", type=int, default=None, help="MLP width (default 3 x dim)")
     ap.add_argument("--resume", action="store_true", help="continue from <out>.partial")
     ap.add_argument("--check-every", type=int, default=2000, help="sampled exact-match check")
     ap.add_argument("--seed", type=int, default=1337)
@@ -82,9 +91,10 @@ def main():
 
     rng = random.Random(args.seed)
     torch.manual_seed(args.seed)
-    facts = load_facts()
+    facts = load_facts(args.tier)
     examples = [encode_example(canonical(qs), a) for qs, a in facts]
-    cfg = Config(dim=args.dim, layers=args.layers, hidden=3 * args.dim)
+    cfg = Config(dim=args.dim, layers=args.layers, heads=args.heads, kv_heads=args.kv_heads,
+                 hidden=args.hidden or 3 * args.dim)
     too_long = [canonical(qs) for (qs, _), (t, _) in zip(facts, examples) if len(t) > cfg.ctx]
     assert not too_long, f"key + answer exceed the {cfg.ctx}-token context: {too_long[:3]}"
     model = TinyGPT(cfg)
