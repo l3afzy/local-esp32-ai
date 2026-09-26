@@ -77,7 +77,7 @@ def q2(w):
     first in the lowest 2 bits, stored +2; then one fp16 scale per 32."""
     rows, cols = w.shape
     g = w.detach().float().reshape(rows, cols // GROUP, GROUP)
-    scale = (g.abs().amax(-1, keepdim=True) / 1.5).clamp(min=6.2e-5).half().float()
+    scale = (g.abs().mean(-1, keepdim=True) * 1.2).clamp(min=6.2e-5).half().float()
     q = torch.clamp(torch.floor(g / scale), -2, 1)
     assert torch.equal(((q + 0.5) * scale).reshape(rows, cols), quantize_int2(w.detach().float()))
     u = (q + 2).to(torch.uint8).reshape(rows, cols // 4, 4).numpy()
