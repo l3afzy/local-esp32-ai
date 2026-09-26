@@ -43,35 +43,27 @@ Anything it doesn't know gets `I don't know.` instead of a guess.
 
 ## Usage
 
-1. Flash it (below), then open a serial terminal at **115200 baud** (`pio device monitor`).
-2. Wait for `tinyai ready`, type a question, press Enter.
-3. **Keep it short.** Name the topic in a few words: `hypothermia` works, `i think my friend has hypothermia what do i do` doesn't.
-4. `I don't know.` means no matching fact: try fewer words, or it doesn't know.
+**First time (once, with a computer):**
+
+1. Download this project: on GitHub click **Code → Download ZIP** and unzip it. No GitHub account needed.
+2. Install [VS Code](https://code.visualstudio.com) and its **PlatformIO** extension.
+3. Plug the ESP32 into the computer with a USB cable.
+4. Open a terminal in the project's `firmware` folder and run `pio run -t upload`. This copies the AI onto the ESP32 (about a minute).
+
+**Every time after that:**
+
+1. Plug the ESP32 into any computer (or a phone with a USB serial app). No internet, no GitHub, no uploading again: the AI lives on the ESP32.
+2. Open a serial terminal at **115200 baud**: `pio device monitor` in the `firmware` folder. The terminal is just a keyboard and screen for the ESP32.
+3. Wait for `tinyai ready`, type a question, press Enter.
+4. **Keep it short.** `hypothermia` works; `i think my friend has hypothermia what do i do` doesn't.
+5. `I don't know.` means no matching fact: try fewer words, or it doesn't know.
 
 ```
 you: purify water
 esp: Boil it for 1 minute (3 above 6,500 ft).
-you: how much water for 2 people for 5 days
-esp: 10 gallons (38 L) for 5 days.
 ```
 
-More examples and tips: [docs/usage.md](docs/usage.md).
-
-## Flash it
-
-You need [PlatformIO](https://platformio.org/install/cli) and an ESP32 board with 4 MB of flash (ESP32, ESP32-S3 or ESP32-C3).
-
-```sh
-cd firmware
-pio run -t upload            # or: pio run -e esp32-s3 -t upload
-pio device monitor           # type questions, press Enter
-```
-
-Or try it on a PC first, with the same C engine:
-
-```sh
-make -C host && ./host/tinyai firmware/data/model.bin
-```
+More examples and tips: [docs/usage.md](docs/usage.md). To try it on a PC without an ESP32: `make -C host && ./host/tinyai firmware/data/model.bin`.
 
 ## Results
 

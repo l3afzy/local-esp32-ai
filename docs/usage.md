@@ -1,22 +1,21 @@
 # How to use it
 
-## 1. Connect
+## 1. Set up
 
-**On the ESP32:** flash it once (see the [README](../README.md#flash-it)), then open a serial terminal at **115200 baud**:
+**First time (once, with a computer):**
 
-```sh
-cd firmware
-pio device monitor
-```
+1. Download this project: on GitHub click **Code → Download ZIP** and unzip it. No GitHub account needed.
+2. Install [VS Code](https://code.visualstudio.com) and its **PlatformIO** extension.
+3. Plug the ESP32 into the computer with a USB cable.
+4. Open a terminal in the project's `firmware` folder and run `pio run -t upload`. This copies the AI onto the ESP32 (about a minute).
 
-Any serial terminal works (Arduino IDE Serial Monitor, PuTTY, screen). Set it to send a newline when you press Enter. When it's ready it prints:
+**Every time after that:**
 
-```
-tinyai ready: 24854 facts, 2974 KB model, 2 cores, 199 KB heap free
-you:
-```
-
-**On a PC:** `make -C host && ./host/tinyai firmware/data/model.bin`
+1. Plug the ESP32 into any computer (or a phone with a USB serial app). No internet, no GitHub, no uploading again: the AI lives on the ESP32.
+2. Open a serial terminal at **115200 baud**: `pio device monitor` in the `firmware` folder. The terminal is just a keyboard and screen for the ESP32.
+3. Wait for `tinyai ready`, type a question, press Enter.
+4. **Keep it short.** `hypothermia` works; `i think my friend has hypothermia what do i do` doesn't.
+5. `I don't know.` means no matching fact: try fewer words, or it doesn't know.
 
 ## 2. Ask
 
