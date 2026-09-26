@@ -79,7 +79,9 @@ int main(int argc, char **argv) {
             else if (tai_calc(norm, out, sizeof out)) printf("=%s\n", out);
             else {
                 int g = tai_gate(&m, norm);
-                printf("%s\n", g ? tai_fact(&m, g - 1) : "-");
+                char key[TAI_MAX_Q + 1] = "-";
+                if (g) tai_fact(&m, g - 1, key, sizeof key);
+                printf("%s\n", key);
             }
             continue;
         }
@@ -96,7 +98,9 @@ int main(int argc, char **argv) {
             char norm[TAI_MAX_Q + 1];
             tai_normalize(line, norm, sizeof norm);
             int g = tai_gate(&m, norm);
-            printf("\t[%s] -> [%s]", norm, g ? tai_fact(&m, g - 1) : "-");
+            char key[TAI_MAX_Q + 1] = "-";
+            if (g) tai_fact(&m, g - 1, key, sizeof key);
+            printf("\t[%s] -> [%s]", norm, key);
         }
         printf("\n");
         fflush(stdout);
